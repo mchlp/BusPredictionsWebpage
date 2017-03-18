@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!--<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">-->
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="script.js"></script>
+<link rel="stylesheet" href="styles.css">
+<title>
+Test - Bus Predictions
+</title>
+
+<audio autoplay muted>
+    <source src="resources/chime.mp3", type="audio/mp3">
+    Your browser does not support the audio element.
+</audio>
+
+</head>
+
+<body>
+
+<h2>Predictions</h2>
+
+<p id="message">Loading...</p>
+
+<progress id="progress"></progress>
+<div></div>
+
+<select id="routeSelect">
+    <option value="">Select Route</option>
+</select>
+
+<select id="branchSelect">
+    <option value=0>Select Branch</option>
+</select>
+
+<select id="stopSelect">
+    <option value=0>Select Stop</option>
+</select>
+
+<div></div>
+
+<button id="default">Default</button>
+<button id="go">Go</button>
+
+<hr id="predictionDiv">
+
+<div id="predictions" style="padding:20px;"></div>
+
+<button id="refresh">Refresh</button>
+
+<hr id="mapDiv">
+
+<div id="map" style="width:400px; height:400px; background:yellow"> </div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
+<small>Click on Red Pin to Reset View</small>
+
+</body>
+</html>
