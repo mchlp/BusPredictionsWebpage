@@ -111,6 +111,8 @@ function setUpNewRoute() {
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
         $("#progress").show();
+        $(".loader").show();
+        $(".loader").attr("id", "loadSpinnerNormal");
     
         //set last reload time
         lastReloadTime = now;
@@ -168,6 +170,7 @@ function createPage() {
     
     createMap();
     
+    $(".loader").hide();
     $("#progress").hide();
     lastRefreshComplete = true;
 }
@@ -602,7 +605,8 @@ function getData(type, id){
 //display loading error message
 function displayLoadingMessage() {
     if (!doneLoading) {
-        $("#message").text("Data could not be retrieved.");
+        $("#message").text("Error 1 - Data could not be retrieved.");
+        $(".loader").attr("id", "loadSpinnerError");
     }
 }
 

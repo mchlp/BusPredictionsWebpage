@@ -7,8 +7,9 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script src="script.js"></script>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <title>
-Test - Bus Predictions
+Vehicle Predictions - Test
 </title>
 
 <audio autoplay muted>
@@ -20,12 +21,11 @@ Test - Bus Predictions
 
 <body>
 
-<h2>Predictions</h2>
+<h2>TTC Bus & Streetcar Predictions</h2>
 
+<i class="loader fa fa-refresh fa-spin" id="loadSpinnerNormal"></i>
 <p id="message">Loading...</p>
-
-<progress id="progress"></progress>
-<div></div>
+<!--<progress id="progress"></progress>-->
 
 <select id="routeSelect">
     <option value="">Select Route</option>

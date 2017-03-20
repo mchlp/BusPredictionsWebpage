@@ -1,0 +1,11 @@
+#loadSpinnerError {
+    color:red;
+    font-size: 50px;
+    padding: 5px;
+}
+
+#loadSpinnerNormal {
+    color: #3498db;
+    font-size: 50px;
+    padding: 5px;
+}
