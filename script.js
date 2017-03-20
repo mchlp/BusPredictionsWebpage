@@ -35,6 +35,8 @@ var route = "";
 var newRoute = "17";
 var routeTag = "";
 var newRouteTag = "17_0_17A";
+var stopId = "";
+var newStopId = "0466"
 var stopTag = "";
 var newStopTag = "1638"
 
@@ -73,7 +75,7 @@ function buttonPress() {
     if (buttonID == "default") {
         newRoute = "17";
         newRouteTag = "17_0_17A";
-        newStopTag = "1638";
+        newStopId = "0466";
         setUpNewRoute();
     }
 }
@@ -100,6 +102,7 @@ function selectChange() {
     
     if (selectID == "stopSelect") {
         newStopTag = $("#stopSelect").val();
+        newStopId = stopData[newStopTag]["stopId"];
     }
 }
 
@@ -128,12 +131,20 @@ function setUpNewRoute() {
         
         //set route settings
         routeTag = newRouteTag;
+        stopId = newStopId;
         stopTag = newStopTag;
         route = newRoute;
 
         getData("stop"); 
         getData("vech");
-        getData("pred");
+        if (stopTag.indexOf("_ar") == -1) {
+            console.log("by stopId")
+            getData("predStopId");
+        }
+        else {
+            console.log("by stopTag")
+            getData("predStopTag");
+        }
 
         maxLoadingChecks = 5;
         loadingCheckerInterval = setInterval(checkLoadingStatus, 500); 
@@ -284,9 +295,16 @@ function displayAllRoutes() {
 function getPredictions() {
     predData.length = 0;
     
-    var getDataList = ["isDeparture", "branch", "dirTag", "vehicle", "block", "tripTag"];
+    var predictions = allPredXML.getElementsByTagName("predictions")[0];
+    var getDataList = ["agencyTitle", "routeTitle", "routeTag", "stopTitle", "stopTag"]
     
-    allPredBranches = allPredXML.getElementsByTagName("direction")
+    for (var i = 0; i < getDataList.length; i++) {
+        predData[getDataList[i]] = predictions.attributes.getNamedItem(getDataList[i]).nodeValue;
+    }
+    
+    var getDataList = ["isDeparture", "branch", "dirTag", "vehicle", "block", "tripTag"];
+    var predDirectionData = [];
+    allPredBranches = allPredXML.getElementsByTagName("direction");
     
     for (var i = 0; i < allPredBranches.length; i++) {
         curPredBranch = allPredBranches[i];
@@ -316,23 +334,29 @@ function getPredictions() {
         }
         
         curPredBranchData["predictions"] = curPredBranchPredictions;
-        predData.push(curPredBranchData);
+        predDirectionData.push(curPredBranchData);
     }
     
-    
-    
+    predData["data"] = predDirectionData;
 }
 
 //display list of predictions
 function displayPredictions() {
-    $("#predictions").empty();
 
-    for (var i=0; i<predData.length; i++) {
+    $("#predictions").empty();
+    var predDirectionData = predData["data"];
     
-        curDisplayPredBranch = predData[i];
+    var predStopTitle = predData["stopTitle"];
+    var predStopTag = predData["stopTag"];
+    
+    $("<h2></h2>").html(predStopTitle).appendTo("#predictions");
+    
+    for (var i=0; i<predDirectionData.length; i++) {
+    
+        curDisplayPredBranch = predDirectionData[i];
         
-        curDisplayPredBranchTitle = predData[i]["title"].nodeValue;
-        curDisplayPredBranchPredictions = predData[i]["predictions"];
+        curDisplayPredBranchTitle = predDirectionData[i]["title"].nodeValue;
+        curDisplayPredBranchPredictions = predDirectionData[i]["predictions"];
         
         $("<h3></h3>").html(curDisplayPredBranchTitle).appendTo("#predictions");
        
@@ -518,7 +542,8 @@ function parseXML(data, type) {
         case "vech":
             vechLocXML = data;
         	break;
-        case "pred":
+        case "predStopId":
+        case "predStopTag":
             allPredXML = data;
         	break;
         case "route":
@@ -530,28 +555,8 @@ function parseXML(data, type) {
     }
 }
 
-//old function
-function readXML(data){
-    var xmlDoc = data.responseXML;
-    $("#refresh").click(function(){
-        //alert(xmlDoc);
-        allPreds = xmlDoc.getElementsByTagName("prediction");
-        $("#stops").empty();
-        for (var i=0; i<allPreds.length; i++) {
-            min = allPreds[i].attributes.getNamedItem("minutes").nodeValue;
-            sec = allPreds[i].attributes.getNamedItem("seconds").nodeValue;
-            sec = sec%60;
-            busName = allPreds[i].attributes.getNamedItem("dirTag").nodeValue;
-            busName = busName.substring(busName.lastIndexOf("_")+1, busName.length);
-            busNum = allPreds[i].attributes.getNamedItem("vehicle").nodeValue;
-            $("<li></li>").html(busName + " - " + busNum + " - " + min + ":" + sec).appendTo("#stops");
-        }
-    });
-    getData();
-}
-
 //get data from NextBus servers
-function getData(type, id){
+function getData(type){
 
     var url;
     
@@ -562,10 +567,12 @@ function getData(type, id){
         case "vech":
             url = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=ttc&r="+route;
             break;
-        case "pred":
-            //url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&stopId="+stopID;
-            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&r="+route+"&s="+stopTag;
+        case "predStopId":
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&stopId="+stopId;
             //url = "https://www.nextbus.com/api/pub/v1/agencies/ttc/routes/17/stops/1638/predictions?coincident=true&direction=17_0_17A&key=7141fa6118803c15751f29743cb974ab&timestamp=1489868202701";
+            break;
+        case "predStopTag":
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&r="+route+"&s="+stopTag;
             break;
         case "route":
             url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeList&a=ttc";
@@ -707,7 +714,6 @@ function getDirection(degree) {
 
 //get direction of bus
 function getBusDirection(dirTag) {
-    console.log(dirTag);    console.log(branchData);
     curDir = branchData[dirTag]["name"].toLowerCase();
     return curDir+".png"
 }
