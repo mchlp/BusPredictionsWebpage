@@ -1,45 +1,91 @@
 
+//last time the page was reloaded
 var lastReloadTime;
+//whether the last data refresh was complete
 var lastRefreshComplete = false;
 
+//whether the new route data is ready
 var newRouteReady = false;
+//whether the page is done loading (should error message be displayed)
 var doneLoading = false;
+//number of times to check for page load completion
 var maxLoadingChecks;
+//the interval object to store the interval checker for page load completion
 var loadingCheckerInterval;
 
+//objects on the map
 var mapObjects = [];
+//vehicles on the map
+var mapVehicleObjects = [];
+//map object
+var map;
 
+//old xml for all predictions, to verify new xml has been retrieved
+var oldAllPredXML;
+//current xml for all predictions
 var allPredXML;
+
+//old xml for vehicle locations, to verify new data has been retrieved
+var oldVechLocXML;
+//current xml for vehicle locations
 var vechLocXML;
-var routeDataXML;
+
+//xml for information on all routes
 var allRouteDataXML;
+
+//current xml for route information
+var routeDataXML;
+//xml for route currently selected in selector
 var newRouteDataXML;
+//old xml for route information, to verify new xml has been retrieved
 var oldRouteDataXML;
 
+//url to retrieve predictions
 var predURL;
+//url to retrieve vehicle locations
 var vechURL;
+//url to retrieve stop data for a route
 var stopURL;
 
+//data for all routes
 var allRouteData = [];
+//data for coordinates of the route for display on map
 var routeCords = [];
+//data for vehicles on the route
 var busData = [];
+//data for branches of the route
 var branchData = [];
+//data for stops on the route being predicted
 var stopData = [];
+//data for stops for route in selector
 var newStopData = [];
+//prediction data
 var predData = [];
+//colour of route, from xml
 var routeColour = "ff0000";
+//opposite colour of route, from xml
 var oppRouteColour = "ffffff";
 
+//location of current stop (lat, long)
 var stopLocation = [];
+//route previously selected
 var route = "";
+//route newly selected
 var newRoute = "17";
+//route tag previously selected
 var routeTag = "";
+//route tag newly selected
 var newRouteTag = "17_0_17A";
+//stop id previously selected
 var stopId = "";
-var newStopId = "0466"
+//stop id newly selected
+var newStopId = "0466";
+//stop tag previously selected
 var stopTag = "";
-var newStopTag = "1638"
+//stop tag newly selected
+var newStopTag = "1638";
 
+//when document is ready
 $(document).ready(pageReady);
 
 //page ready
@@ -59,10 +105,12 @@ function pageReady() {
 
 //button pressed
 function buttonPress() {
+    //id of button pressed
     var buttonID = this.id;
+    
     if (buttonID == "refresh") {
         if (lastRefreshComplete) {
-            setUpNewRoute();
+            refreshPredictions();
         }
         else {
             alert("The page is still being refreshed.");
@@ -72,6 +120,7 @@ function buttonPress() {
     if (buttonID == "go") {
         goButtonClicked();
     }
+    
     if (buttonID == "default") {
         newRoute = "17";
         newRouteTag = "17_0_17A";
@@ -80,7 +129,7 @@ function buttonPress() {
     }
 }
 
-//route select changed
+//selector changed
 function selectChange() {
     console.log(this.id);
     var selectID = this.id;
@@ -102,7 +151,44 @@ function selectChange() {
     
     if (selectID == "stopSelect") {
         newStopTag = $("#stopSelect").val();
-        newStopId = stopData[newStopTag]["stopId"];
+        newStopId = newStopData[newStopTag]["stopId"];
+    }
+}
+
+//refresh predictions & map
+function refreshPredictions() {
+    now = new Date().getTime();
+    
+    //prevent page from being reloaded too quickly (will cause page to crash)
+    if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+    
+        //set last reload time
+        lastReloadTime = now;
+        
+        //set reload complete flag to false
+        lastRefreshComplete = false;
+
+        //keep old predictions and vehicle locations data to verify new data has been retrived
+        oldAllPredXML = allPredXML;
+        oldVechLocXML = vechLocXML;
+        
+        //check for resource loading & timeout
+        window.setTimeout(displayLoadingMessage, 3000);
+        
+        getData("vech");
+        
+        //arrival stop, does not have stop id
+        if (stopTag.indexOf("_ar") == -1) {
+            console.log("by stopId");
+            getData("predStopId");
+        }
+        else {
+            console.log("by stopTag");
+            getData("predStopTag");
+        }
+
+        maxLoadingChecks = 5;
+        loadingCheckerInterval = setInterval(checkUpdatePredictionsLoadingStatus, 500); 
     }
 }
 
@@ -124,7 +210,7 @@ function setUpNewRoute() {
         lastRefreshComplete = false;
         
         //loading message 
-        $("message").text("Loading...").show();
+        $(".loadingMessage").text("Loading...").show();
 
         //check for resource loading & timeout
         window.setTimeout(displayLoadingMessage, 3000);
@@ -138,18 +224,18 @@ function setUpNewRoute() {
         getData("stop"); 
         getData("vech");
         if (stopTag.indexOf("_ar") == -1) {
-            console.log("by stopId")
+            console.log("by stopId");
             getData("predStopId");
         }
         else {
-            console.log("by stopTag")
+            console.log("by stopTag");
             getData("predStopTag");
         }
 
         maxLoadingChecks = 5;
         loadingCheckerInterval = setInterval(checkLoadingStatus, 500); 
     }
-};
+}
 
 //create page
 function createPage() {
@@ -172,18 +258,19 @@ function createPage() {
         
     displayStopData();
 
-    $("#message").hide();
+    $(".loadingMessage").hide();
     doneLoading = true;
     
+    //set default values on selectors
     $("#routeSelect")[0].value = route;
     $("#branchSelect")[0].value = routeTag;
     $("#stopSelect")[0].value = newStopTag;
     
+    //create map
     createMap();
     
     $(".loader").hide();
     $("#progress").hide();
-    lastRefreshComplete = true;
 }
 
 //create map
@@ -196,21 +283,21 @@ function createMap() {
     var defaultZoom = 14;
 
     //map
-    var mapCenter = new google.maps.LatLng(stopLocation[0], stopLocation[1])
+    var mapCenter = new google.maps.LatLng(stopLocation[0], stopLocation[1]);
     var mapCanvas = document.getElementById("map");
     var mapProp = {
         center: mapCenter,
         zoom: defaultZoom,
         streetViewControl: false
     };
-    var map = new google.maps.Map(mapCanvas, mapProp);
+    map = new google.maps.Map(mapCanvas, mapProp);
     
     //stop marker
     var stopMarkerProp = {
         position: mapCenter,
         //icon: getResource("bus-station.svg")
         //animation: google.maps.Animation.BOUNCE
-    }
+    };
     var stopMarker = new google.maps.Marker(stopMarkerProp);
     stopMarker.setMap(map);
     mapObjects.push(stopMarker);
@@ -222,29 +309,14 @@ function createMap() {
           path: routeCords[i],
           strokeOpacity: 0.8,
           strokeWeight: 2
-        }
+        };
         var routeLine = new google.maps.Polyline(routeLineProp);
         routeLine.setMap(map);
         mapObjects.push(routeLine);
     }
     
     //bus locations
-    for (var i=0; i<busData.length; i++) {
-    
-        var curBus = busData[i];
-        var icon = getResource(getBusDirection(curBus["dirTag"]));
-        
-        var busMarkerProp = {
-            position: busData[i]["coord"],
-            //icon: getResource("bus-station.png"),
-            icon: icon,
-            title: busData[i]["id"]
-            //animation: google.maps.Animation.BOUNCE
-        }
-        var busMarker = new google.maps.Marker(busMarkerProp);
-        busMarker.setMap(map);
-        mapObjects.push(busMarker);
-    }
+    updateMapVehicleLocations();
     
     //click on marker to reset zoom
     google.maps.event.addListener(stopMarker, 'click', function() {
@@ -256,9 +328,33 @@ function createMap() {
     busData.length = 0; 
 }
 
+//update the vehicle locations on map
+function updateMapVehicleLocations() {
+    
+    clearMapVehicles();
+
+    for (var i=0; i<busData.length; i++) {
+        var curBus = busData[i];
+        var icon = getResource(getBusDirection(curBus["dirTag"]));
+        
+        var busMarkerProp = {
+            position: busData[i]["coord"],
+            //icon: getResource("bus-station.png"),
+            icon: icon,
+            title: busData[i]["id"]+" - "+busData[i]["dirTag"]
+            //animation: google.maps.Animation.BOUNCE
+        };
+        
+        var busMarker = new google.maps.Marker(busMarkerProp);
+        busMarker.setMap(map);
+        mapObjects.push(busMarker);
+        mapVehicleObjects.push(busMarker);
+    }
+}
+
 //get all routes
 function getAllRoutes() {
-    getDataList = ["tag", "title"]
+    getDataList = ["tag", "title"];
     allRoutes = allRouteDataXML.getElementsByTagName("route");
     
     for (var i=0; i<allRoutes.length; i++) {
@@ -283,7 +379,7 @@ function displayAllRoutes() {
     }));
 
     for (var i = 0; i<allRouteData.length; i++) {
-        curRouteData = allRouteData[i]
+        curRouteData = allRouteData[i];
         $("#routeSelect").append($("<option>", {
             value: curRouteData["tag"],
             text: curRouteData["title"]
@@ -296,7 +392,7 @@ function getPredictions() {
     predData.length = 0;
     
     var predictions = allPredXML.getElementsByTagName("predictions")[0];
-    var getDataList = ["agencyTitle", "routeTitle", "routeTag", "stopTitle", "stopTag"]
+    var getDataList = ["agencyTitle", "routeTitle", "routeTag", "stopTitle", "stopTag"];
     
     for (var i = 0; i < getDataList.length; i++) {
         predData[getDataList[i]] = predictions.attributes.getNamedItem(getDataList[i]).nodeValue;
@@ -311,7 +407,7 @@ function getPredictions() {
         curPredBranchData = [];
         curPredBranchData["title"] = curPredBranch.attributes.getNamedItem("title");
         
-        curPredBranchPredictions = []
+        curPredBranchPredictions = [];
         branchPreds = curPredBranch.children;
         
         for (var j = 0; j<branchPreds.length; j++) {
@@ -361,7 +457,7 @@ function displayPredictions() {
         $("<h3></h3>").html(curDisplayPredBranchTitle).appendTo("#predictions");
        
         for (var j=0; j<curDisplayPredBranchPredictions.length; j++) {
-            curPredData = curDisplayPredBranchPredictions[j]
+            curPredData = curDisplayPredBranchPredictions[j];
             $("<li></li>").html(curPredData["branch"] + " - " + curPredData["vehicle"] + " - in " + 
                 curPredData["minutes"] + " min " + curPredData["seconds"] + " sec - " + 
                 curPredData["timeStr"]).appendTo("#predictions");
@@ -383,7 +479,7 @@ function getStopData(type) {
     if (type == "start") {
         stopData = [];
     }
-    newStopData = []
+    newStopData = [];
 
     if (type == "start") {
         routeColour = routeDataXML.getElementsByTagName("route")[0].attributes.getNamedItem("color").nodeValue;
@@ -612,7 +708,7 @@ function getData(type){
 //display loading error message
 function displayLoadingMessage() {
     if (!doneLoading) {
-        $("#message").text("Error 1 - Data could not be retrieved.");
+        $(".loadingMessage").text("Error 1 - Data could not be retrieved.");
         $(".loader").attr("id", "loadSpinnerError");
     }
 }
@@ -635,6 +731,7 @@ function checkLoadingStatus() {
     else {
         doneLoading = true;
         createPage();
+        lastRefreshComplete = true;
     }
 }
 
@@ -643,6 +740,20 @@ function checkNewRouteLoadingStatus() {
     if (newRouteDataXML != oldRouteDataXML) {
         getBranchData();
         displayBranchData();
+    }
+    else {
+        maxLoadingChecks = maxLoadingChecks-1
+    }
+}
+
+//check if new predictions and vehicle locations xml is loaded
+function checkUpdatePredictionsLoadingStatus() {
+    if (allPredXML != oldAllPredXML && vechLocXML != oldVechLocXML) {
+        getPredictions();
+        displayPredictions();
+        getBusCords();
+        updateMapVehicleLocations();
+        lastRefreshComplete = true;
     }
     else {
         maxLoadingChecks = maxLoadingChecks-1
@@ -662,6 +773,14 @@ function clearMap() {
         mapObjects[i].setMap(null);
     }
     mapObjects.length = 0;
+}
+
+//clear vehicles from map
+function clearMapVehicles() {
+    for (var i = 0; i < mapVehicleObjects.length; i++) {
+        mapVehicleObjects[i].setMap(null);
+    }
+    mapVehicleObjects.length = 0;
 }
 
 //left pad number with zeros

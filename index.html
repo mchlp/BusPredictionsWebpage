@@ -24,25 +24,39 @@ Vehicle Predictions - Test
 <h1>TTC Bus & Streetcar Predictions</h1>
 
 <i class="loader fa fa-refresh fa-spin" id="loadSpinnerNormal"></i>
-<p id="message">Loading...</p>
+<p class="loadingMessage"></p>
+
 <!--<progress id="progress"></progress>-->
 
-<select id="routeSelect">
-    <option value="">Select Route</option>
-</select>
+<fieldset>
+    <legend>Select a Stop</legend>
+    
+    <fieldset>
+        <legend>By Route</legend>
 
-<select id="branchSelect">
-    <option value=0>Select Branch</option>
-</select>
+        <select id="routeSelect">
+            <option value="">Select Route</option>
+        </select>
 
-<select id="stopSelect">
-    <option value=0>Select Stop</option>
-</select>
+        <select id="branchSelect">
+            <option value=0>Select Branch</option>
+        </select>
 
-<div></div>
-
-<button id="default">Default</button>
-<button id="go">Go</button>
+        <select id="stopSelect">
+            <option value=0>Select Stop</option>
+        </select>
+        <div></div>
+        <input type="checkbox" name="displayOnlyThisRoute">Only Display Predictions for this Route at this Stop<br>
+    </fieldset>
+    OR
+    <fieldset>
+        <legend>By Stop Number</legend>
+        Stop ID: <input type="number" id="myNumber" value="2">
+    </fieldset>
+    <button id="default">Default</button>
+    <button id="go">Go</button>
+</fieldset>
+<p class="inputMessage"><p>
 
 <hr id="predictionDiv">
 
