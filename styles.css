@@ -9,3 +9,7 @@
     font-size: 50px;
     padding: 5px;
 }
+
+#errorMessage {
+    color:red;
+}

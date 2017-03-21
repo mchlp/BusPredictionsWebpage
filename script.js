@@ -173,7 +173,7 @@ function refreshPredictions() {
         oldVechLocXML = vechLocXML;
         
         //check for resource loading & timeout
-        window.setTimeout(displayLoadingMessage, 3000);
+        window.setTimeout(displayLoadingErrorMessage, 3000);
         
         getData("vech");
         
@@ -213,7 +213,7 @@ function setUpNewRoute() {
         $(".loadingMessage").text("Loading...").show();
 
         //check for resource loading & timeout
-        window.setTimeout(displayLoadingMessage, 3000);
+        window.setTimeout(displayLoadingErrorMessage, 3000);
         
         //set route settings
         routeTag = newRouteTag;
@@ -706,9 +706,10 @@ function getData(type){
 }
 
 //display loading error message
-function displayLoadingMessage() {
+function displayLoadingErrorMessage() {
     if (!doneLoading) {
         $(".loadingMessage").text("Error 1 - Data could not be retrieved.");
+        $(".loadingMessage").attr("id", "errorMessage");
         $(".loader").attr("id", "loadSpinnerError");
     }
 }
