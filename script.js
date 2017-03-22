@@ -781,7 +781,7 @@ function displayLoadingErrorMessage() {
     clearInterval(loadingCheckerInterval);
     if (!doneLoading) {
         $(".loadingMessage").text("Error 1 - Data could not be retrieved.");
-        $(".loadingMessage").attr("id", "errorMessage");
+        $(".loadingMessage").addClass("errorMessage");
         $(".loader").attr("id", "loadSpinnerError");
     }
 }
@@ -895,7 +895,7 @@ function goButtonClicked() {
         }
         else {
             console.log("GO BUTTON - more than one field selected");
-            $(".inputMessage").html = "Only choose one field.";
+            $(".inputMessage").text("Only one field may be selected.");
         }
     }
     else if ($(".inputStopId").val() != "") {
@@ -905,7 +905,7 @@ function goButtonClicked() {
     }
     else {
         console.log("GO BUTTON - no info entered");
-        $(".inputMessage").html = "No fields selected";
+        $(".inputMessage").text("No fields were selected");
     }
 }
 
