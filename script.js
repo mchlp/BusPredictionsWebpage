@@ -131,27 +131,33 @@ function buttonPress() {
 
 //selector changed
 function selectChange() {
-    console.log(this.id);
+    console.log("selector change - " + this.id);
     var selectID = this.id;
     
     if (selectID == "routeSelect") {
         newRoute = $("#routeSelect").val();
         oldRouteDataXML = newRouteDataXML;
-        
         getData("new");
         maxLoadingChecks = 5;
         loadingCheckerInterval = setInterval(checkNewRouteLoadingStatus, 500);
+        
+        if (newRoute === "0") {
+            newRouteTag = "0";
+            displayStopData("clear");
+        }
     }
     
-    if (selectID == "branchSelect") {
+    else if (selectID == "branchSelect") {
         newRouteTag = $("#branchSelect").val();
         getStopData("new");
         displayStopData();
     }
     
-    if (selectID == "stopSelect") {
-        newStopTag = $("#stopSelect").val();
-        newStopId = newStopData[newStopTag]["stopId"];
+    else if (selectID == "stopSelect") {
+        if ($("#branchSelect").val() != 0) {
+            newStopTag = $("#stopSelect").val();
+            newStopId = newStopData[newStopTag]["stopId"];
+        }
     }
 }
 
@@ -161,7 +167,9 @@ function refreshPredictions() {
     
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
-    
+        
+        console.log("refresh predictions")
+        
         //set last reload time
         lastReloadTime = now;
         
@@ -179,11 +187,11 @@ function refreshPredictions() {
         
         //arrival stop, does not have stop id
         if (stopTag.indexOf("_ar") == -1) {
-            console.log("by stopId");
+            console.log("refresh by stopId - ar");
             getData("predStopId");
         }
         else {
-            console.log("by stopTag");
+            console.log("refresh by stopTag - normal");
             getData("predStopTag");
         }
 
@@ -199,6 +207,7 @@ function setUpNewRoute() {
     
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+        console.log("set up new route - by tag")
         $("#progress").show();
         $(".loader").show();
         $(".loader").attr("id", "loadSpinnerNormal");
@@ -215,7 +224,7 @@ function setUpNewRoute() {
         //check for resource loading & timeout
         window.setTimeout(displayLoadingErrorMessage, 3000);
         
-        //set route settings
+        //update stop settings
         routeTag = newRouteTag;
         stopId = newStopId;
         stopTag = newStopTag;
@@ -223,17 +232,53 @@ function setUpNewRoute() {
 
         getData("stop"); 
         getData("vech");
+        
         if (stopTag.indexOf("_ar") == -1) {
-            console.log("by stopId");
+            console.log("refresh by stopId - ar");
             getData("predStopId");
         }
         else {
-            console.log("by stopTag");
+            console.log("refresh by stopTag - normal");
             getData("predStopTag");
         }
-
+        
         maxLoadingChecks = 5;
         loadingCheckerInterval = setInterval(checkLoadingStatus, 500); 
+    }
+}
+
+//new route chosen by ID
+function setUpNewRouteById() {
+
+    now = new Date().getTime();
+    
+    //prevent page from being reloaded too quickly (will cause page to crash)
+    if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+        console.log("set up new route - by id")
+        $("#progress").show();
+        $(".loader").show();
+        $(".loader").attr("id", "loadSpinnerNormal");
+    
+        //set last reload time
+        lastReloadTime = now;
+        
+        //set reload complete flag to false
+        lastRefreshComplete = false;
+        
+        //loading message 
+        $(".loadingMessage").text("Loading...").show();
+
+        //check for resource loading & timeout
+        window.setTimeout(displayLoadingErrorMessage, 3000);
+        
+        //update by id
+        stopId = newStopId;
+        
+        oldAllPredXML = allPredXML;
+        getData("predStopId");
+        
+        maxLoadingChecks = 5;
+        loadingCheckerInterval = setInterval(checkUpdateByIdForPred, 500); 
     }
 }
 
@@ -391,76 +436,94 @@ function displayAllRoutes() {
 function getPredictions() {
     predData.length = 0;
     
-    var predictions = allPredXML.getElementsByTagName("predictions")[0];
-    var getDataList = ["agencyTitle", "routeTitle", "routeTag", "stopTitle", "stopTag"];
+    var allPredictions = allPredXML.getElementsByTagName("predictions");
     
-    for (var i = 0; i < getDataList.length; i++) {
-        predData[getDataList[i]] = predictions.attributes.getNamedItem(getDataList[i]).nodeValue;
-    }
-    
-    var getDataList = ["isDeparture", "branch", "dirTag", "vehicle", "block", "tripTag"];
-    var predDirectionData = [];
-    allPredBranches = allPredXML.getElementsByTagName("direction");
-    
-    for (var i = 0; i < allPredBranches.length; i++) {
-        curPredBranch = allPredBranches[i];
-        curPredBranchData = [];
-        curPredBranchData["title"] = curPredBranch.attributes.getNamedItem("title");
+    for (var h=0; h<allPredictions.length; h++) {
+        var getDataList = ["agencyTitle", "routeTitle", "routeTag", "stopTitle", "stopTag"];
+        var predictions = allPredictions[h];
+        var thisPredData = [];
+        var thisPredictionDirectionData = [];
         
-        curPredBranchPredictions = [];
-        branchPreds = curPredBranch.children;
-        
-        for (var j = 0; j<branchPreds.length; j++) {
-            curPredData = [];
-            curPred = branchPreds[j];
-
-            for (var k=0; k<getDataList.length; k++) {
-                curPredData[getDataList[k]] = curPred.attributes.getNamedItem(getDataList[k]).nodeValue;
-            }
-            
-            curPredData["epochTime"] = Number(curPred.attributes.getNamedItem("epochTime").nodeValue);
-            
-            curPredData["minutes"] = zeroFill(Number(curPred.attributes.getNamedItem("minutes").nodeValue), 0);
-            curPredData["seconds"] = zeroFill(Number(curPred.attributes.getNamedItem("seconds").nodeValue)%60, 2);
-            curPredData["simDir"] = getSimDir(curPredData["dirTag"]);
-            
-            curPredData["timeStr"] = getTimeString(curPredData["epochTime"]);
-            
-            curPredBranchPredictions.push(curPredData);
+        for (var i = 0; i < getDataList.length; i++) {
+            thisPredData[getDataList[i]] = predictions.attributes.getNamedItem(getDataList[i]).nodeValue;
         }
         
-        curPredBranchData["predictions"] = curPredBranchPredictions;
-        predDirectionData.push(curPredBranchData);
+        var getDataList = ["isDeparture", "branch", "dirTag", "vehicle", "block", "tripTag"];
+        var predDirectionData = [];
+        allPredBranches = predictions.getElementsByTagName("direction");
+        
+        for (var i = 0; i < allPredBranches.length; i++) {
+            curPredBranch = allPredBranches[i];
+            curPredBranchData = [];
+            curPredBranchData["title"] = curPredBranch.attributes.getNamedItem("title");
+            
+            curPredBranchPredictions = [];
+            branchPreds = curPredBranch.children;
+            
+            for (var j = 0; j<branchPreds.length; j++) {
+                curPredData = [];
+                curPred = branchPreds[j];
+
+                for (var k=0; k<getDataList.length; k++) {
+                    curPredData[getDataList[k]] = curPred.attributes.getNamedItem(getDataList[k]).nodeValue;
+                }
+                
+                curPredData["epochTime"] = Number(curPred.attributes.getNamedItem("epochTime").nodeValue);
+                
+                curPredData["minutes"] = zeroFill(Number(curPred.attributes.getNamedItem("minutes").nodeValue), 0);
+                curPredData["seconds"] = zeroFill(Number(curPred.attributes.getNamedItem("seconds").nodeValue)%60, 2);
+                curPredData["simDir"] = getSimDir(curPredData["dirTag"]);
+                
+                curPredData["timeStr"] = getTimeString(curPredData["epochTime"]);
+                
+                curPredBranchPredictions.push(curPredData);
+            }
+            curPredBranchData["predictions"] = curPredBranchPredictions;
+            thisPredictionDirectionData.push(curPredBranchData);
+            
+        }
+        thisPredData["data"] = thisPredictionDirectionData
+        predData.push(thisPredData);
     }
-    
-    predData["data"] = predDirectionData;
 }
 
 //display list of predictions
 function displayPredictions() {
 
     $("#predictions").empty();
-    var predDirectionData = predData["data"];
+    var allPredDirectionData = predData;
     
-    var predStopTitle = predData["stopTitle"];
-    var predStopTag = predData["stopTag"];
+    var predStopTitle = allPredDirectionData[0]["stopTitle"];
+    var predStopTag = allPredDirectionData[0]["stopTag"];
     
     $("<h2></h2>").html(predStopTitle).appendTo("#predictions");
+    $("<strong></strong>").html("Stop ID: " + stopId).appendTo("#predictions");
     
-    for (var i=0; i<predDirectionData.length; i++) {
-    
-        curDisplayPredBranch = predDirectionData[i];
+    for (var h=0; h < allPredDirectionData.length; h++) {
+ 
+        var thisPredData = allPredDirectionData[h];
         
-        curDisplayPredBranchTitle = predDirectionData[i]["title"].nodeValue;
-        curDisplayPredBranchPredictions = predDirectionData[i]["predictions"];
-        
-        $("<h3></h3>").html(curDisplayPredBranchTitle).appendTo("#predictions");
-       
-        for (var j=0; j<curDisplayPredBranchPredictions.length; j++) {
-            curPredData = curDisplayPredBranchPredictions[j];
-            $("<li></li>").html(curPredData["branch"] + " - " + curPredData["vehicle"] + " - in " + 
-                curPredData["minutes"] + " min " + curPredData["seconds"] + " sec - " + 
-                curPredData["timeStr"]).appendTo("#predictions");
+        if ((!$("#displayOnlyThisRoute")[0].checked) || ($("#displayOnlyThisRoute")[0].checked 
+                                    && thisPredData["routeTag"] === route)) {
+            
+            var predDirectionData = thisPredData["data"];
+            
+            for (var i=0; i<predDirectionData.length; i++) {
+                
+                curDisplayPredBranch = predDirectionData[i];
+                
+                curDisplayPredBranchTitle = predDirectionData[i]["title"].nodeValue;
+                curDisplayPredBranchPredictions = predDirectionData[i]["predictions"];
+                
+                $("<h3></h3>").html(curDisplayPredBranchTitle).appendTo("#predictions");
+               
+                for (var j=0; j<curDisplayPredBranchPredictions.length; j++) {
+                    curPredData = curDisplayPredBranchPredictions[j];
+                    $("<li></li>").html(curPredData["branch"] + " - " + curPredData["vehicle"] + " - in " + 
+                        curPredData["minutes"] + " min " + curPredData["seconds"] + " sec - " + 
+                        curPredData["timeStr"]).appendTo("#predictions");
+                }
+            }
         }
     }
 }    
@@ -511,10 +574,7 @@ function getStopData(type) {
 }
 
 //display list of stops
-function displayStopData() {
-    
-    var curBranch = branchData[newRouteTag];
-    curBranchStopList = curBranch["stops"];
+function displayStopData(type) {
 
     $("#stopSelect").empty();
     
@@ -523,13 +583,19 @@ function displayStopData() {
         text: "Select Stop"
     }));
     
-    for (var i = 0; i<curBranchStopList.length; i++) {
-        curBranchStopTag = curBranchStopList[i]
-        curBranchStop = newStopData[curBranchStopTag];
-        $("#stopSelect").append($("<option>", {
-            value: curBranchStop["tag"],
-            text: curBranchStop["title"]
-        }));
+    if (type != "clear") {
+    
+        var curBranch = branchData[newRouteTag];
+        curBranchStopList = curBranch["stops"];
+    
+        for (var i = 0; i<curBranchStopList.length; i++) {
+            curBranchStopTag = curBranchStopList[i]
+            curBranchStop = newStopData[curBranchStopTag];
+            $("#stopSelect").append($("<option>", {
+                value: curBranchStop["tag"],
+                text: curBranchStop["title"]
+            }));
+        }
     }
 }
 
@@ -609,14 +675,20 @@ function getBusCords() {
     var allVech = vechLocXML.getElementsByTagName("vehicle");
     var getDataList = ["id", "dirTag", "lat", "lon", "heading", "secsSinceReport"];
     
+    findAllVehicles:
     for (var i=0; i<allVech.length; i++) {
         var vech = allVech[i]
-        if (vech.attributes.getNamedItem("predictable").nodeValue == "true") {
+        if (vech.attributes.getNamedItem("predictable").nodeValue == "true" && vech.attributes.getNamedItem("heading").nodeValue >= 0) {
             curVechData = [];
         
             for (var j=0; j<getDataList.length; j++) {
                 //console.log(getDataList[j]);
-                curVechData[getDataList[j]] = vech.attributes.getNamedItem(getDataList[j]).nodeValue;   
+                if (getDataList[j] in vech.attributes) {
+                    curVechData[getDataList[j]] = vech.attributes.getNamedItem(getDataList[j]).nodeValue;   
+                }
+                else {
+                    continue findAllVehicles;
+                }
             }
             
             curVechData["simDir"] = getSimDir["dirTag"];
@@ -628,7 +700,7 @@ function getBusCords() {
 
 //convert data in xml format
 function parseXML(data, type) {
-    console.log(data, type);
+    console.log("PARSE DATA", data, type);
     switch (type) {
         case "stop":
             routeDataXML = data;
@@ -693,7 +765,6 @@ function getData(type){
     xhttp.send();
     */
     
-    
     $.ajax({
         type: "GET",
         url: url,
@@ -707,6 +778,7 @@ function getData(type){
 
 //display loading error message
 function displayLoadingErrorMessage() {
+    clearInterval(loadingCheckerInterval);
     if (!doneLoading) {
         $(".loadingMessage").text("Error 1 - Data could not be retrieved.");
         $(".loadingMessage").attr("id", "errorMessage");
@@ -761,10 +833,79 @@ function checkUpdatePredictionsLoadingStatus() {
     }
 }
 
+//check if new predictions are loaded for route update by ID (part 1 - predictions)
+function checkUpdateByIdForPred() {
+    if (allPredXML != oldAllPredXML) {
+        clearInterval(loadingCheckerInterval);
+    
+        newStopTag = allPredXML.getElementsByTagName("predictions")[0].attributes.getNamedItem("stopTag").value;
+        newRoute = allPredXML.getElementsByTagName("predictions")[0].attributes.getNamedItem("routeTag").value;
+        
+        stopTag = newStopTag;
+        route = newRoute;
+        
+        oldRouteDataXML = routeDataXML;
+        getData("stop");
+                
+        maxLoadingChecks = 5;
+        loadingCheckerInterval = setInterval(checkUpdateByIdForStop, 500); 
+    }
+    else {
+        maxLoadingChecks = maxLoadingChecks-1;
+    }
+}
+
+//check if new predictions are loaded for route update by ID (part 2 - route info)
+function checkUpdateByIdForStop() {
+    if (routeDataXML != oldRouteDataXML) {
+        
+        getBranchData();
+        
+        searchForRouteTag:
+        for (var branch in branchData) {
+            var branchStopList = branchData[branch]["stops"]
+            
+            for (var i = 0; i < branchStopList.length; i++) {
+                if (branchStopList[i] === stopTag ) {
+                    routeTag = branchData[branch]["tag"]
+                    break searchForRouteTag;
+                }
+            }
+        }
+        
+        newRouteTag = routeTag;
+        getData("stop"); 
+        getData("vech");
+        getData("predStopId");
+        
+        maxLoadingChecks = 5;
+        loadingCheckerInterval = setInterval(checkLoadingStatus, 500); 
+    }
+    else {
+        maxLoadingChecks = maxLoadingChecks-1
+    }
+}
+
 //go button clicked
 function goButtonClicked() {
     if ($("#routeSelect").val() != 0 && $("#routeSelect").val() != 0 && $("#stopSelect").val() != 0) {
-        setUpNewRoute();
+        if ($(".inputStopId").val() == "") {
+            console.log("GO BUTTON - selector");
+            setUpNewRoute();
+        }
+        else {
+            console.log("GO BUTTON - more than one field selected");
+            $(".inputMessage").html = "Only choose one field.";
+        }
+    }
+    else if ($(".inputStopId").val() != "") {
+        console.log("GO BUTTON - stop id");
+        newStopId = $(".inputStopId").val();
+        setUpNewRouteById();
+    }
+    else {
+        console.log("GO BUTTON - no info entered");
+        $(".inputMessage").html = "No fields selected";
     }
 }
 
