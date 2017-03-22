@@ -108,31 +108,43 @@ function buttonPress() {
     //id of button pressed
     var buttonID = this.id;
     
-    if (buttonID == "refresh") {
-        if (lastRefreshComplete) {
-            refreshPredictions();
-        }
-        else {
-            alert("The page is still being refreshed.");
-        }
-    }
-    
-    if (buttonID == "go") {
+	switch (buttonID) {
+		
+		case "refresh":
+			if (lastRefreshComplete) {
+				refreshPredictions();
+			}
+			else {
+				alert("The page is still being refreshed.");
+			}
+			break;
+	
+	case "go":
         goButtonClicked();
-    }
+		break;
     
-    if (buttonID == "default") {
+    case "default":
         newRoute = "17";
         newRouteTag = "17_0_17A";
         newStopId = "0466";
         setUpNewRoute();
-    }
+		break;
+		
+	case "reset":
+		$(".inputStopId").val("") ;
+		$("#routeSelect").val(0);
+		selectChange();
+	}
 }
 
 //selector changed
 function selectChange() {
-    console.log("selector change - " + this.id);
-    var selectID = this.id;
+    console.log("selector change - " + this.id); 
+	var selectID = this.id;
+	console.log(selectID);
+	if (selectID === undefined) {
+		selectID = "routeSelect";
+	}
     
     if (selectID == "routeSelect") {
         newRoute = $("#routeSelect").val();
