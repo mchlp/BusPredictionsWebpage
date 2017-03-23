@@ -127,14 +127,24 @@ function buttonPress() {
         newRoute = "17";
         newRouteTag = "17_0_17A";
         newStopId = "0466";
+        newStopTag = "1638"
         setUpNewRoute();
 		break;
 		
 	case "reset":
-		$(".inputStopId").val("") ;
+		$(".inputStopId").val("");
 		$("#routeSelect").val(0);
 		selectChange();
-	}
+        break;
+    
+    case "clearByStopId":
+        $(".inputStopId").val("");
+        break;
+    case "clearByRoute":
+        $("#routeSelect").val(0);
+		selectChange();
+        break;
+    }
 }
 
 //selector changed
@@ -146,30 +156,31 @@ function selectChange() {
 		selectID = "routeSelect";
 	}
     
-    if (selectID == "routeSelect") {
-        newRoute = $("#routeSelect").val();
-        oldRouteDataXML = newRouteDataXML;
-        getData("new");
-        maxLoadingChecks = 5;
-        loadingCheckerInterval = setInterval(checkNewRouteLoadingStatus, 500);
+    switch (selectID) {
+        case "routeSelect":
+            newRoute = $("#routeSelect").val();
+            oldRouteDataXML = newRouteDataXML;
+            getData("new");
+            maxLoadingChecks = 5;
+            loadingCheckerInterval = setInterval(checkNewRouteLoadingStatus, 500);
+            if (newRoute === "0") {
+                newRouteTag = "0";
+                displayStopData("clear");
+            }
+            break;
         
-        if (newRoute === "0") {
-            newRouteTag = "0";
-            displayStopData("clear");
-        }
-    }
-    
-    else if (selectID == "branchSelect") {
-        newRouteTag = $("#branchSelect").val();
-        getStopData("new");
-        displayStopData();
-    }
-    
-    else if (selectID == "stopSelect") {
-        if ($("#branchSelect").val() != 0) {
-            newStopTag = $("#stopSelect").val();
-            newStopId = newStopData[newStopTag]["stopId"];
-        }
+        case "branchSelect":
+            newRouteTag = $("#branchSelect").val();
+            getStopData("new");
+            displayStopData();
+            break;
+        
+        case "stopSelect":
+            if ($("#branchSelect").val() != 0) {
+                newStopTag = $("#stopSelect").val();
+                newStopId = newStopData[newStopTag]["stopId"];
+            }
+            break;
     }
 }
 
@@ -542,7 +553,7 @@ function displayPredictions() {
 
 //get locations of stops - FIX
 function getStopLocation() {
-    curStop = newStopData[stopTag];
+    curStop = newStopData[newStopTag];
     var lat = curStop["lat"];
     var lon = curStop["lon"];
     stopLocation[0] = Number(lat);
@@ -850,7 +861,6 @@ function checkUpdateByIdForPred() {
     if (allPredXML != oldAllPredXML) {
         clearInterval(loadingCheckerInterval);
         
-        console.log(allPredXML);
         if (allPredXML.getElementsByTagName("Error").length > 0) {
             if (allPredXML.getElementsByTagName("Error")[0].attributes.getNamedItem("shouldRetry").value === "false") {
                 console.log("GO BUTTON - Invalid Stop ID entered");

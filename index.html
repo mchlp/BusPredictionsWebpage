@@ -28,6 +28,8 @@ Vehicle Predictions - Test
 
 <!--<progress id="progress"></progress>-->
 
+<mark>Use ONE of the two options below to select a stop and click GO to get predictions.</mark>
+<br>
 <fieldset>
     <legend>Select a Stop: </legend>
     
@@ -47,11 +49,14 @@ Vehicle Predictions - Test
         </select>
         <div></div>
         <input type="checkbox" id="displayOnlyThisRoute">Only Display Predictions for this Route at this Stop<br>
+        <button id="clearByRoute">Clear</button>
     </fieldset>
-    OR
+    <strong>OR</strong>
     <fieldset>
         <legend>By Stop Number</legend>
         Stop ID: <input type="number" class="inputStopId">
+        <div></div>
+        <button id="clearByStopId">Clear</button>
     </fieldset>
     <button id="default">Default</button>
 	<button id="reset">Reset</button>
