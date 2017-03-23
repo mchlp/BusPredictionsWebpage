@@ -849,7 +849,18 @@ function checkUpdatePredictionsLoadingStatus() {
 function checkUpdateByIdForPred() {
     if (allPredXML != oldAllPredXML) {
         clearInterval(loadingCheckerInterval);
-    
+        
+        console.log(allPredXML);
+        if (allPredXML.getElementsByTagName("Error").length > 0) {
+            if (allPredXML.getElementsByTagName("Error")[0].attributes.getNamedItem("shouldRetry").value === "false") {
+                console.log("GO BUTTON - Invalid Stop ID entered");
+                $(".inputMessage").text("Stop ID entered is Invalid");
+                $(".loader").hide();
+                $("#progress").hide();
+                return;
+            }
+        }
+        
         newStopTag = allPredXML.getElementsByTagName("predictions")[0].attributes.getNamedItem("stopTag").value;
         newRoute = allPredXML.getElementsByTagName("predictions")[0].attributes.getNamedItem("routeTag").value;
         
@@ -900,6 +911,7 @@ function checkUpdateByIdForStop() {
 
 //go button clicked
 function goButtonClicked() {
+    $(".inputMessage").text("");
     if ($("#routeSelect").val() != 0 && $("#routeSelect").val() != 0 && $("#stopSelect").val() != 0) {
         if ($(".inputStopId").val() == "") {
             console.log("GO BUTTON - selector");
@@ -913,11 +925,12 @@ function goButtonClicked() {
     else if ($(".inputStopId").val() != "") {
         console.log("GO BUTTON - stop id");
         newStopId = $(".inputStopId").val();
+        
         setUpNewRouteById();
     }
     else {
         console.log("GO BUTTON - no info entered");
-        $(".inputMessage").text("No fields were selected");
+        $(".inputMessage").text("No fields were completed");
     }
 }
 
