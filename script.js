@@ -414,8 +414,6 @@ function createMap() {
 
 //update the vehicle locations on map
 function updateMapVehicleLocations() {
-    
-    clearMapVehicles();
 
     for (var i=0; i<busData.length; i++) {
         var curBus = busData[i];
@@ -861,6 +859,10 @@ function checkNewRouteLoadingStatus() {
 //check if new predictions and vehicle locations xml is loaded
 function checkUpdatePredictionsLoadingStatus() {
     if (allPredXML != oldAllPredXML && vechLocXML != oldVechLocXML) {
+        clearInterval(loadingCheckerInterval);
+        
+        clearMapVehicles();
+        
         getPredictions();
         displayPredictions();
         getBusCords();
@@ -871,7 +873,7 @@ function checkUpdatePredictionsLoadingStatus() {
         $(".loadingMessage").hide();
     }
     else {
-        maxLoadingChecks = maxLoadingChecks-1
+        maxLoadingChecks = maxLoadingChecks-1;
     }
 }
 
@@ -976,7 +978,8 @@ function clearMapVehicles() {
     for (var i = 0; i < mapVehicleObjects.length; i++) {
         mapVehicleObjects[i].setMap(null);
     }
-    mapVehicleObjects.length = 0;
+    mapVehicleObjects = [];
+    busData = [];
 }
 
 //left pad number with zeros
