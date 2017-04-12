@@ -125,10 +125,16 @@ function buttonPress() {
 			break;
 	
 	case "go":
+        //clear auto refresher
+        clearInterval(autoRefreshInterval);
+        
         goButtonClicked();
 		break;
     
     case "default":
+        //clear auto refresher
+        clearInterval(autoRefreshInterval);
+        
         newRoute = "17";
         newRouteTag = "17_0_17A";
         newStopId = "0466";
