@@ -161,6 +161,9 @@ function selectChange() {
 		selectID = "routeSelect";
 	}
     
+    //clear auto refresher
+    clearInterval(autoRefreshInterval);
+    
     switch (selectID) {
         case "routeSelect":
             newRoute = $("#routeSelect").val();
@@ -234,9 +237,6 @@ function setUpNewRoute() {
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
     
-        //clear auto refresher
-        clearInterval(autoRefreshInterval);
-    
         console.log("set up new route - by tag")
         $("#progress").show();
         $(".loader").show();
@@ -284,9 +284,6 @@ function setUpNewRouteById() {
     
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
-    
-        //clear auto refresher
-        clearInterval(autoRefreshInterval);
     
         console.log("set up new route - by id")
         $(".loader").show();
