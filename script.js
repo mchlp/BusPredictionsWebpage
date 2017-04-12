@@ -12,6 +12,8 @@ var doneLoading = false;
 var maxLoadingChecks;
 //the interval object to store the interval checker for page load completion
 var loadingCheckerInterval;
+//the interval object to store the auto reload function
+var autoRefreshInterval;
 
 //objects on the map
 var mapObjects = [];
@@ -112,6 +114,9 @@ function buttonPress() {
 		
 		case "refresh":
 			if (lastRefreshComplete) {
+                $("#progress").show();
+                $(".loader").show();
+                $(".loadingMessage").show();
 				refreshPredictions();
 			}
 			else {
@@ -191,8 +196,6 @@ function refreshPredictions() {
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
         
-        console.log("refresh predictions")
-        
         //set last reload time
         lastReloadTime = now;
         
@@ -230,6 +233,10 @@ function setUpNewRoute() {
     
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+    
+        //clear auto refresher
+        clearInterval(autoRefreshInterval);
+    
         console.log("set up new route - by tag")
         $("#progress").show();
         $(".loader").show();
@@ -277,8 +284,11 @@ function setUpNewRouteById() {
     
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+    
+        //clear auto refresher
+        clearInterval(autoRefreshInterval);
+    
         console.log("set up new route - by id")
-        $("#progress").show();
         $(".loader").show();
         $(".loader").attr("id", "loadSpinnerNormal");
     
@@ -336,6 +346,9 @@ function createPage() {
     
     //create map
     createMap();
+    
+    //create auto refresher
+    autoRefreshInterval = setInterval(autoRefreshPredictions, 5000); 
     
     $(".loader").hide();
     $("#progress").hide();
@@ -850,6 +863,9 @@ function checkUpdatePredictionsLoadingStatus() {
         getBusCords();
         updateMapVehicleLocations();
         lastRefreshComplete = true;
+        $("#progress").hide();
+        $(".loader").hide();
+        $(".loadingMessage").hide();
     }
     else {
         maxLoadingChecks = maxLoadingChecks-1
@@ -1014,3 +1030,9 @@ function getBusDirection(dirTag) {
     return curDir+".png"
 }
 
+//auto refresh predictions
+function autoRefreshPredictions() {
+    if (lastRefreshComplete) {
+        refreshPredictions();
+    }
+}
