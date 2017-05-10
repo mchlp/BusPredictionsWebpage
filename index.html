@@ -1,79 +1,57 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="script.js"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="styles/w3.css">
-    <title>
-    Vehicle Predictions - Test
-    </title>
-
-    <audio autoplay muted>
-        <source src="resources/chime.mp3", type="audio/mp3">
-        Your browser does not support the audio element.
-    </audio>
-</head>
-
+    <head>
+        <meta name="generator"
+        content="HTML Tidy for HTML5 (experimental) for Windows https://github.com/w3c/tidy-html5/tree/c63cc39" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <script src="script.js"></script>
+        <link rel="stylesheet" href="styles/main.css" />
+        <link rel="stylesheet" href="styles/w3.css" />
+        <title>Vehicle Predictions - Test</title>
+    </head>
     <body>
-        
-        <div id="title" class="w3-container w3-teal">
-            <h1>TTC Bus & Streetcar Predictions</h1>
-        </div>
-        
-        <i class="loader fa fa-refresh fa-spin" id="loadSpinnerNormal"></i>
-        <p class="loadingMessage"></p>
-
-        <!--<progress id="progress"></progress>-->
-
-        <mark>Use ONE of the two options below to select a stop and click GO to get predictions.</mark>
-        <br>
-        <fieldset>
-            <legend>Select a Stop: </legend>
-            
-            <fieldset>
-                <legend>By Route</legend>
-
-                <select id="routeSelect">
-                    <option value="">Select Route</option>
-                </select>
-
-                <select id="branchSelect">
-                    <option value=0>Select Branch</option>
-                </select>
-
-                <select id="stopSelect">
-                    <option value=0>Select Stop</option>
-                </select>
-                <div></div>
-                <input type="checkbox" id="displayOnlyThisRoute">Only Display Predictions for this Route at this Stop<br>
-                <button id="clearByRoute">Clear</button>
-            </fieldset>
-            <strong>OR</strong>
-            <fieldset>
-                <legend>By Stop Number</legend>
-                Stop ID: <input type="number" class="inputStopId">
-                <div></div>
-                <button id="clearByStopId">Clear</button>
-            </fieldset>
-            <button id="default">Default</button>
-            <button id="reset">Reset</button>
-            <button id="go">Go</button>
-        </fieldset>
-        <p class="errorMessage inputMessage"><p>
-
-        <hr id="predictionDiv">
-
-        <div id="predictions" style="padding:20px;"></div>
-
-        <button id="refresh">Refresh</button>
-
-        <hr id="mapDiv">
-
-        <div id="map" style="width:400px; height:400px; background:yellow"> </div>
-
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
-        <small>Click on Red Pin to Reset View</small>
-
-    </body>
+    <audio autoplay="" muted="">
+    <source src="resources/chime.mp3" type="audio/mp3" />Your browser does not support the audio element.</audio>
+    <div id="title" class="w3-container w3-teal">
+        <h1>TTC Bus &amp; Streetcar Predictions</h1>
+    </div>
+    <i class="loader fa fa-refresh fa-spin" id="loadSpinnerNormal"></i>
+    <p class="loadingMessage"></p>
+    <div class="w3-panel w3-pale-yellow w3-leftbar w3-border-yellow">
+        <p>Use ONE of the two options below to select a stop and click GO to get predictions.</p>
+    </div>
+    <br />
+    <fieldset>
+    <legend>Select a Stop:</legend>
+    <fieldset>
+    <legend>By Route</legend> 
+    <select id="routeSelect">
+        <option value="">Select Route</option>
+    </select> 
+    <select id="branchSelect">
+        <option value="0">Select Branch</option>
+    </select> 
+    <select id="stopSelect">
+        <option value="0">Select Stop</option>
+    </select> 
+    <input type="checkbox" id="displayOnlyThisRoute" />Only Display Predictions for this Route at this Stop
+    <br />
+    <button id="clearByRoute">Clear</button></fieldset>
+    <strong>OR</strong>
+    <fieldset>
+    <legend>By Stop Number</legend> Stop ID: 
+    <input type="number" class="inputStopId" /> 
+    <button id="clearByStopId">Clear</button></fieldset>
+    <button id="default">Default</button> 
+    <button id="reset">Reset</button> 
+    <button id="go">Go</button></fieldset>
+    <p class="errorMessage inputMessage"></p>
+    <hr id="predictionDiv" />
+    <div id="predictions" style="padding:20px;"></div>
+    <button id="refresh">Refresh</button>
+    <hr id="mapDiv" />
+    <div id="map" style="width:400px; height:400px; background:yellow"></div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script> 
+    <small>Click on Red Pin to Reset View</small></body>
 </html>
