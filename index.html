@@ -15,63 +15,65 @@
     </audio>
 </head>
 
-<body>
+    <body>
+        
+        <div id="title" class="w3-container w3-teal">
+            <h1>TTC Bus & Streetcar Predictions</h1>
+        </div>
+        
+        <i class="loader fa fa-refresh fa-spin" id="loadSpinnerNormal"></i>
+        <p class="loadingMessage"></p>
 
-<h1>TTC Bus & Streetcar Predictions</h1>
+        <!--<progress id="progress"></progress>-->
 
-<i class="loader fa fa-refresh fa-spin" id="loadSpinnerNormal"></i>
-<p class="loadingMessage"></p>
+        <mark>Use ONE of the two options below to select a stop and click GO to get predictions.</mark>
+        <br>
+        <fieldset>
+            <legend>Select a Stop: </legend>
+            
+            <fieldset>
+                <legend>By Route</legend>
 
-<!--<progress id="progress"></progress>-->
+                <select id="routeSelect">
+                    <option value="">Select Route</option>
+                </select>
 
-<mark>Use ONE of the two options below to select a stop and click GO to get predictions.</mark>
-<br>
-<fieldset>
-    <legend>Select a Stop: </legend>
-    
-    <fieldset>
-        <legend>By Route</legend>
+                <select id="branchSelect">
+                    <option value=0>Select Branch</option>
+                </select>
 
-        <select id="routeSelect">
-            <option value="">Select Route</option>
-        </select>
+                <select id="stopSelect">
+                    <option value=0>Select Stop</option>
+                </select>
+                <div></div>
+                <input type="checkbox" id="displayOnlyThisRoute">Only Display Predictions for this Route at this Stop<br>
+                <button id="clearByRoute">Clear</button>
+            </fieldset>
+            <strong>OR</strong>
+            <fieldset>
+                <legend>By Stop Number</legend>
+                Stop ID: <input type="number" class="inputStopId">
+                <div></div>
+                <button id="clearByStopId">Clear</button>
+            </fieldset>
+            <button id="default">Default</button>
+            <button id="reset">Reset</button>
+            <button id="go">Go</button>
+        </fieldset>
+        <p class="errorMessage inputMessage"><p>
 
-        <select id="branchSelect">
-            <option value=0>Select Branch</option>
-        </select>
+        <hr id="predictionDiv">
 
-        <select id="stopSelect">
-            <option value=0>Select Stop</option>
-        </select>
-        <div></div>
-        <input type="checkbox" id="displayOnlyThisRoute">Only Display Predictions for this Route at this Stop<br>
-        <button id="clearByRoute">Clear</button>
-    </fieldset>
-    <strong>OR</strong>
-    <fieldset>
-        <legend>By Stop Number</legend>
-        Stop ID: <input type="number" class="inputStopId">
-        <div></div>
-        <button id="clearByStopId">Clear</button>
-    </fieldset>
-    <button id="default">Default</button>
-	<button id="reset">Reset</button>
-    <button id="go">Go</button>
-</fieldset>
-<p class="errorMessage inputMessage"><p>
+        <div id="predictions" style="padding:20px;"></div>
 
-<hr id="predictionDiv">
+        <button id="refresh">Refresh</button>
 
-<div id="predictions" style="padding:20px;"></div>
+        <hr id="mapDiv">
 
-<button id="refresh">Refresh</button>
+        <div id="map" style="width:400px; height:400px; background:yellow"> </div>
 
-<hr id="mapDiv">
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
+        <small>Click on Red Pin to Reset View</small>
 
-<div id="map" style="width:400px; height:400px; background:yellow"> </div>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
-<small>Click on Red Pin to Reset View</small>
-
-</body>
+    </body>
 </html>
