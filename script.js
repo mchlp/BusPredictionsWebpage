@@ -1,8 +1,9 @@
-
 //last time the page was reloaded
 var lastReloadTime;
 //whether the last data refresh was complete
 var lastRefreshComplete = false;
+//if advanced options are displayed
+var showAdvancedOptions = false;
 
 //whether the new route data is ready
 var newRouteReady = false;
@@ -31,7 +32,8 @@ var allPredXML;
 var oldVechLocXML;
 //current xml for vehicle locations
 var vechLocXML;
-
+//xml for simple route data
+var simpleRouteDataXML;
 //xml for information on all routes
 var allRouteDataXML;
 
@@ -57,6 +59,8 @@ var routeCords = [];
 var busData = [];
 //data for branches of the route
 var branchData = [];
+//data for simple branches of the route
+var simpleBranchData = [];
 //data for stops on the route being predicted
 var stopData = [];
 //data for stops for route in selector
@@ -97,11 +101,17 @@ function pageReady() {
     //button press
     $("button").click(buttonPress);
 
+    //checkbox checked
+    $("input").click(inputChange);
+
     //route select changed
     $("select").change(selectChange);
 
     //get location
-    getLocation();
+    //getLocation();
+
+    //hide advanced options
+    toggleAdvancedOptions(false);
 
     //load all route data
     getData("route");
@@ -114,10 +124,8 @@ function pageReady() {
 function getLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(processLocation, showError);
-    }
-    else {
-        $(".inputMessage").text("Geolocation is not supported by this browser.");
-        $(".errorContainer").show();
+    } else {
+        displayInputError("Geolocation is not supported by this browser.");
     }
 }
 
@@ -131,21 +139,33 @@ function processLocation(position) {
 
 //location error
 function showError(error) {
-    switch(error.code) {
+    switch (error.code) {
         case error.PERMISSION_DENIED:
-            $(".inputMessage").text("Request For Geolocation Was Denied.");
+            displayInputError("Request For Geolocation Was Denied.");
             break;
         case error.POSITION_UNAVAILABLE:
-            $(".inputMessage").text("Location Information Is Unavailable.");
+            displayInputError("Location Information Is Unavailable.");
             break;
         case error.TIMEOUT:
-            $(".inputMessage").text("Request To Get User Location Timed Out.");
+            displayInputError("Request To Get User Location Timed Out.");
             break;
         case error.UNKNOWN_ERROR:
-            $(".inputMessage").text("An Unknown Error Occurred.");
+            displayInputError("An Unknown Error Occurred.");
             break;
     }
     $(".errorContainer").show();
+}
+
+//input field changed
+function inputChange() {
+    var inputID = this.id;
+
+    switch (inputID) {
+        case "displayDetailedBranches":
+            $(".inputStopId").val("");
+            $("#routeSelect").val(0);
+            selectChange();
+    }
 }
 
 //button pressed
@@ -153,62 +173,83 @@ function buttonPress() {
     //id of button pressed
     var buttonID = this.id;
 
-	switch (buttonID) {
+    switch (buttonID) {
 
-		case "refresh":
-			if (lastRefreshComplete) {
+        case "refresh":
+            if (lastRefreshComplete) {
                 $("#progress").show();
                 $(".loader").show();
                 $(".loadingMessage").show();
-				refreshPredictions();
-			}
-			else {
-				alert("The page is still being refreshed.");
-			}
-			break;
+                refreshPredictions();
+            } else {
+                alert("The page is still being refreshed.");
+            }
+            break;
 
-	case "go":
-        //clear auto refresher
-        clearInterval(autoRefreshInterval);
+        case "go":
+            //clear auto refresher
+            clearInterval(autoRefreshInterval);
 
-        goButtonClicked();
-		break;
+            goButtonClicked();
+            break;
 
-    case "default":
-        //clear auto refresher
-        clearInterval(autoRefreshInterval);
+        case "default":
+            //clear auto refresher
+            clearInterval(autoRefreshInterval);
 
-        newRoute = "17";
-        newRouteTag = "17_0_17A";
-        newStopId = "0466";
-        newStopTag = "1638"
-        setUpNewRoute();
-		break;
+            newRoute = "17";
+            newRouteTag = "17_0_17A";
+            newStopId = "0466";
+            newStopTag = "1638"
+            setUpNewRoute();
+            break;
 
-	case "reset":
-		$(".inputStopId").val("");
-		$("#routeSelect").val(0);
-		selectChange();
-        break;
+        case "reset":
+            $(".inputStopId").val("");
+            $("#routeSelect").val(0);
+            selectChange();
+            break;
 
-    case "clearByStopId":
-        $(".inputStopId").val("");
-        break;
-    case "clearByRoute":
-        $("#routeSelect").val(0);
-		selectChange();
-        break;
+        case "clearByStopId":
+            $(".inputStopId").val("");
+            break;
+        case "clearByRoute":
+            $("#routeSelect").val(0);
+            selectChange();
+            break;
+        case "advancedOptions":
+            if (showAdvancedOptions) {
+                $("#advancedOptions").text("Show Advanced Options");
+                toggleAdvancedOptions(false);
+                showAdvancedOptions = false;
+            } else {
+                $("#advancedOptions").text("Hide Advanced Options");
+                toggleAdvancedOptions(true);
+                showAdvancedOptions = true;
+            }
+    }
+}
+
+//toggle advanced Options
+function toggleAdvancedOptions(display) {
+    if (display) {
+        $(".advancedOption").show();
+    } else {
+        $(".advancedOption").hide();
+        $(".advancedOption").each(function() {
+            $($(this).find(".w3-check")).prop("checked", false);
+        });
     }
 }
 
 //selector changed
 function selectChange() {
     console.log("selector change - " + this.id);
-	var selectID = this.id;
-	console.log(selectID);
-	if (selectID === undefined) {
-		selectID = "routeSelect";
-	}
+    var selectID = this.id;
+    console.log(selectID);
+    if (selectID === undefined) {
+        selectID = "routeSelect";
+    }
 
     //clear auto refresher
     clearInterval(autoRefreshInterval);
@@ -224,6 +265,8 @@ function selectChange() {
                 newRouteTag = "0";
                 displayStopData("clear");
             }
+            $("#branchSelect").val("0");
+            $("#stopSelect").val("0");
             break;
 
         case "branchSelect":
@@ -246,7 +289,7 @@ function refreshPredictions() {
     now = new Date().getTime();
 
     //prevent page from being reloaded too quickly (will cause page to crash)
-    if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+    if (Math.abs(lastReloadTime - now) > 500 || isNaN(lastReloadTime - now)) {
 
         //set last reload time
         lastReloadTime = now;
@@ -267,8 +310,7 @@ function refreshPredictions() {
         if (stopTag.indexOf("_ar") == -1) {
             console.log("refresh by stopId - ar");
             getData("predStopId");
-        }
-        else {
+        } else {
             console.log("refresh by stopTag - normal");
             getData("predStopTag");
         }
@@ -284,7 +326,7 @@ function setUpNewRoute() {
     now = new Date().getTime();
 
     //prevent page from being reloaded too quickly (will cause page to crash)
-    if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+    if (Math.abs(lastReloadTime - now) > 500 || isNaN(lastReloadTime - now)) {
 
         console.log("set up new route - by tag")
         $("#progress").show();
@@ -310,13 +352,13 @@ function setUpNewRoute() {
         route = newRoute;
 
         getData("stop");
+        getData("simpleStop");
         getData("vech");
 
         if (stopTag.indexOf("_ar") == -1) {
             console.log("refresh by stopId - ar");
             getData("predStopId");
-        }
-        else {
+        } else {
             console.log("refresh by stopTag - normal");
             getData("predStopTag");
         }
@@ -332,7 +374,7 @@ function setUpNewRouteById() {
     now = new Date().getTime();
 
     //prevent page from being reloaded too quickly (will cause page to crash)
-    if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
+    if (Math.abs(lastReloadTime - now) > 500 || isNaN(lastReloadTime - now)) {
 
         console.log("set up new route - by id")
         $(".loader").show();
@@ -375,9 +417,10 @@ function createPage() {
     displayAllRoutes();
 
     getPredictions();
-    displayPredictions();
+    displayPredictions(false);
 
-    getBranchData();
+    getBranchData(false);
+    getBranchData(true);
     displayBranchData();
 
     displayStopData();
@@ -430,12 +473,12 @@ function createMap() {
     mapObjects.push(stopMarker);
 
     //route lines
-    for (var i=0; i<routeCords.length; i++) {
+    for (var i = 0; i < routeCords.length; i++) {
         var routeLineProp = {
-          strokeColor: "#"+routeColour,
-          path: routeCords[i],
-          strokeOpacity: 0.8,
-          strokeWeight: 2
+            strokeColor: "#" + routeColour,
+            path: routeCords[i],
+            strokeOpacity: 0.8,
+            strokeWeight: 2
         };
         var routeLine = new google.maps.Polyline(routeLineProp);
         routeLine.setMap(map);
@@ -458,7 +501,7 @@ function createMap() {
 //update the vehicle locations on map
 function updateMapVehicleLocations() {
 
-    for (var i=0; i<busData.length; i++) {
+    for (var i = 0; i < busData.length; i++) {
         var curBus = busData[i];
         var icon = getResource(getBusDirection(curBus["dirTag"]));
 
@@ -466,7 +509,7 @@ function updateMapVehicleLocations() {
             position: busData[i]["coord"],
             //icon: getResource("bus-station.png"),
             icon: icon,
-            title: busData[i]["id"]+" - "+busData[i]["dirTag"]
+            title: busData[i]["id"] + " - " + busData[i]["dirTag"]
             //animation: google.maps.Animation.BOUNCE
         };
 
@@ -482,10 +525,10 @@ function getAllRoutes() {
     getDataList = ["tag", "title"];
     allRoutes = allRouteDataXML.getElementsByTagName("route");
 
-    for (var i=0; i<allRoutes.length; i++) {
+    for (var i = 0; i < allRoutes.length; i++) {
         curAllRouteData = [];
 
-        for (var j=0; j<getDataList.length; j++) {
+        for (var j = 0; j < getDataList.length; j++) {
             curAllRouteData[getDataList[j]] = allRoutes[i].attributes.getNamedItem(getDataList[j]).nodeValue;
         }
 
@@ -503,7 +546,7 @@ function displayAllRoutes() {
         text: "Select Route"
     }));
 
-    for (var i = 0; i<allRouteData.length; i++) {
+    for (var i = 0; i < allRouteData.length; i++) {
         curRouteData = allRouteData[i];
         $("#routeSelect").append($("<option>", {
             value: curRouteData["tag"],
@@ -518,7 +561,7 @@ function getPredictions() {
 
     var allPredictions = allPredXML.getElementsByTagName("predictions");
 
-    for (var h=0; h<allPredictions.length; h++) {
+    for (var h = 0; h < allPredictions.length; h++) {
         var getDataList = ["agencyTitle", "routeTitle", "routeTag", "stopTitle", "stopTag"];
         var predictions = allPredictions[h];
         var thisPredData = [];
@@ -540,18 +583,18 @@ function getPredictions() {
             curPredBranchPredictions = [];
             branchPreds = curPredBranch.children;
 
-            for (var j = 0; j<branchPreds.length; j++) {
+            for (var j = 0; j < branchPreds.length; j++) {
                 curPredData = [];
                 curPred = branchPreds[j];
 
-                for (var k=0; k<getDataList.length; k++) {
+                for (var k = 0; k < getDataList.length; k++) {
                     curPredData[getDataList[k]] = curPred.attributes.getNamedItem(getDataList[k]).nodeValue;
                 }
 
                 curPredData["epochTime"] = Number(curPred.attributes.getNamedItem("epochTime").nodeValue);
 
                 curPredData["minutes"] = zeroFill(Number(curPred.attributes.getNamedItem("minutes").nodeValue), 0);
-                curPredData["seconds"] = zeroFill(Number(curPred.attributes.getNamedItem("seconds").nodeValue)%60, 2);
+                curPredData["seconds"] = zeroFill(Number(curPred.attributes.getNamedItem("seconds").nodeValue) % 60, 2);
                 curPredData["simDir"] = getSimDir(curPredData["dirTag"]);
 
                 curPredData["timeStr"] = getTimeString(curPredData["epochTime"]);
@@ -568,7 +611,7 @@ function getPredictions() {
 }
 
 //display list of predictions
-function displayPredictions() {
+function displayPredictions(refresh) {
 
     $("#predictions").empty();
     var allPredDirectionData = predData;
@@ -579,16 +622,16 @@ function displayPredictions() {
     $("<h2></h2>").html(predStopTitle).appendTo("#predictions");
     $("<strong></strong>").html("Stop ID: " + stopId).appendTo("#predictions");
 
-    for (var h=0; h < allPredDirectionData.length; h++) {
+    for (var h = 0; h < allPredDirectionData.length; h++) {
 
         var thisPredData = allPredDirectionData[h];
 
-        if ((!$("#displayOnlyThisRoute")[0].checked) || ($("#displayOnlyThisRoute")[0].checked
-                                    && thisPredData["routeTag"] === route)) {
+        if ((!$("#displayOnlyThisRoute")[0].checked) || ($("#displayOnlyThisRoute")[0].checked &&
+                thisPredData["routeTag"] === route)) {
 
             var predDirectionData = thisPredData["data"];
 
-            for (var i=0; i<predDirectionData.length; i++) {
+            for (var i = 0; i < predDirectionData.length; i++) {
 
                 curDisplayPredBranch = predDirectionData[i];
 
@@ -597,7 +640,7 @@ function displayPredictions() {
 
                 $("<h3></h3>").html(curDisplayPredBranchTitle).appendTo("#predictions");
 
-                for (var j=0; j<curDisplayPredBranchPredictions.length; j++) {
+                for (var j = 0; j < curDisplayPredBranchPredictions.length; j++) {
                     curPredData = curDisplayPredBranchPredictions[j];
                     $("<li></li>").html(curPredData["branch"] + " - " + curPredData["vehicle"] + " - in " +
                         curPredData["minutes"] + " min " + curPredData["seconds"] + " sec - " +
@@ -606,6 +649,10 @@ function displayPredictions() {
             }
         }
     }
+    if (!refresh) {
+        $("#predictions").get(0).scrollIntoView();
+    }
+    $("#loadingContainer").hide();
 }
 
 //get locations of stops - FIX
@@ -635,12 +682,12 @@ function getStopData(type) {
 
     var getDataList = ["tag", "title", "lat", "lon", "stopId"]
 
-    for (var i=0; i<allStops.length; i++) {
+    for (var i = 0; i < allStops.length; i++) {
 
         var curStop = allStops[i];
         var curStopData = [];
 
-        for (var j=0; j<getDataList.length; j++) {
+        for (var j = 0; j < getDataList.length; j++) {
             item = curStop.attributes.getNamedItem(getDataList[j])
             if (item != undefined) {
                 curStopData[getDataList[j]] = item.value;
@@ -668,7 +715,7 @@ function displayStopData(type) {
         var curBranch = branchData[newRouteTag];
         curBranchStopList = curBranch["stops"];
 
-        for (var i = 0; i<curBranchStopList.length; i++) {
+        for (var i = 0; i < curBranchStopList.length; i++) {
             curBranchStopTag = curBranchStopList[i]
             curBranchStop = newStopData[curBranchStopTag];
             $("#stopSelect").append($("<option>", {
@@ -680,21 +727,27 @@ function displayStopData(type) {
 }
 
 //get data for each direction of route & clear interval
-function getBranchData() {
+function getBranchData(simple) {
 
     clearInterval(loadingCheckerInterval);
 
-    branchData = [];
+    if (simple) {
+        simpleBranchData = [];
+        var allDirections = simpleRouteDataXML.getElementsByTagName("direction");
+    } else {
+        branchData = [];
+        var allDirections = newRouteDataXML.getElementsByTagName("direction");
+    }
     var getDataList = ["title", "name", "branch", "tag", "useForUI"];
-    var allDirections = newRouteDataXML.getElementsByTagName("direction");
 
-    for (var i=0; i<allDirections.length; i++) {
+
+    for (var i = 0; i < allDirections.length; i++) {
         //route data
         var curDir = allDirections[i];
         //var curDirTag = curDir.attributes.getNamedItem("tag").nodeValue;
         var curDirData = [];
 
-        for (var j=0; j<getDataList.length; j++) {
+        for (var j = 0; j < getDataList.length; j++) {
             curDirData[getDataList[j]] = curDir.attributes.getNamedItem(getDataList[j]).nodeValue;
         }
 
@@ -702,12 +755,16 @@ function getBranchData() {
         var curDirStops = curDir.children;
         var curDirStopsList = [];
 
-        for (var j=0; j<curDirStops.length; j++) {
+        for (var j = 0; j < curDirStops.length; j++) {
             curDirStopsList.push(curDirStops[j].attributes.getNamedItem("tag").nodeValue);
         }
         curDirData["stops"] = curDirStopsList;
         //branchData[curDirTag] = curDirData;
-        branchData[curDirData["tag"]] = curDirData;
+        if (simple) {
+            simpleBranchData[curDirData["tag"]] = curDirData;
+        } else {
+            branchData[curDirData["tag"]] = curDirData;
+        }
     }
 }
 
@@ -720,12 +777,14 @@ function displayBranchData() {
         text: "Select Branch"
     }));
 
-    //for (var i = 0; i < branchData.length; i++) {
+    if ($("#displayDetailedBranches").is(':checked')) {
+        selectorBranchData = branchData;
+    } else {
+        selectorBranchData = simpleBranchData;
+    }
 
-    //branchData.forEach(function(curBranch, index) {
-
-    for (var curBranchName in branchData) {
-        curBranch = branchData[curBranchName];
+    for (var curBranchName in selectorBranchData) {
+        curBranch = selectorBranchData[curBranchName];
         $("#branchSelect").append($("<option>", {
             value: curBranch["tag"],
             text: curBranch["title"]
@@ -737,11 +796,11 @@ function displayBranchData() {
 function getRouteCords() {
     var allPaths = routeDataXML.getElementsByTagName("path");
 
-    for (var i=0; i<allPaths.length; i++) {
+    for (var i = 0; i < allPaths.length; i++) {
         var sectionCords = []
         var cordsInPath = allPaths[i].getElementsByTagName("point");
 
-        for (var j=0; j<cordsInPath.length; j++) {
+        for (var j = 0; j < cordsInPath.length; j++) {
             var lat = Number(cordsInPath[j].attributes.getNamedItem("lat").nodeValue);
             var lon = Number(cordsInPath[j].attributes.getNamedItem("lon").nodeValue);
             sectionCords.push(new google.maps.LatLng(lat, lon));
@@ -756,32 +815,33 @@ function getBusCords() {
     var getDataList = ["id", "dirTag", "lat", "lon", "heading", "secsSinceReport"];
 
     findAllVehicles:
-    for (var i=0; i<allVech.length; i++) {
-        var vech = allVech[i]
-        if (vech.attributes.getNamedItem("predictable").nodeValue == "true" && vech.attributes.getNamedItem("heading").nodeValue >= 0) {
-            curVechData = [];
+        for (var i = 0; i < allVech.length; i++) {
+            var vech = allVech[i]
+            if (vech.attributes.getNamedItem("predictable").nodeValue == "true" && vech.attributes.getNamedItem("heading").nodeValue >= 0) {
+                curVechData = [];
 
-            for (var j=0; j<getDataList.length; j++) {
-                //console.log(getDataList[j]);
-                if (getDataList[j] in vech.attributes) {
-                    curVechData[getDataList[j]] = vech.attributes.getNamedItem(getDataList[j]).nodeValue;
+                for (var j = 0; j < getDataList.length; j++) {
+                    //console.log(getDataList[j]);
+                    if (getDataList[j] in vech.attributes) {
+                        curVechData[getDataList[j]] = vech.attributes.getNamedItem(getDataList[j]).nodeValue;
+                    } else {
+                        continue findAllVehicles;
+                    }
                 }
-                else {
-                    continue findAllVehicles;
-                }
+
+                curVechData["simDir"] = getSimDir["dirTag"];
+                curVechData["coord"] = new google.maps.LatLng(curVechData["lat"], curVechData["lon"]);
+                busData.push(curVechData);
             }
-
-            curVechData["simDir"] = getSimDir["dirTag"];
-            curVechData["coord"] = new google.maps.LatLng(curVechData["lat"], curVechData["lon"]);
-            busData.push(curVechData);
         }
-    }
 }
 
 //convert data in xml format
 function parseXML(data, type) {
     console.log("PARSE DATA", data, type);
     switch (type) {
+        case "simpleStop":
+            simpleRouteDataXML = data;
         case "stop":
             routeDataXML = data;
             newRouteDataXML = data;
@@ -789,44 +849,48 @@ function parseXML(data, type) {
             break;
         case "vech":
             vechLocXML = data;
-        	break;
+            break;
         case "predStopId":
         case "predStopTag":
             allPredXML = data;
-        	break;
+            break;
         case "route":
             allRouteDataXML = data;
             break;
         case "new":
             newRouteDataXML = data;
+            simpleRouteDataXML = data;
             newRouteReady = true;
     }
 }
 
 //get data from NextBus servers
-function getData(type){
+function getData(type) {
 
     var url;
 
     switch (type) {
+        case "simpleStop":
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + route;
+            break;
         case "stop":
-            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r="+route+"&verbose";
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + route + "&verbose";
             break;
         case "vech":
-            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=ttc&r="+route;
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=vehicleLocations&a=ttc&r=" + route;
             break;
         case "predStopId":
-            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&stopId="+stopId;
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&stopId=" + stopId;
             //url = "https://www.nextbus.com/api/pub/v1/agencies/ttc/routes/17/stops/1638/predictions?coincident=true&direction=17_0_17A&key=7141fa6118803c15751f29743cb974ab&timestamp=1489868202701";
             break;
         case "predStopTag":
-            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&r="+route+"&s="+stopTag;
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&r=" + route + "&s=" + stopTag;
             break;
         case "route":
             url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeList&a=ttc";
             break;
         case "new":
-            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r="+newRoute;
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + newRoute;
             break;
     }
 
@@ -861,6 +925,8 @@ function displayLoadingErrorMessage() {
     clearInterval(loadingCheckerInterval);
     if (!doneLoading) {
         $(".loadingMessage").text("Error 1 - Data could not be retrieved.");
+        $("#loadingContainer").removeClass("w3-pale-blue w3-border-blue")
+        $("#loadingContainer").addClass("w3-pale-red w3-border-red")
         $(".loadingMessage").addClass("errorMessage");
         $(".loader").attr("id", "loadSpinnerError");
     }
@@ -868,20 +934,19 @@ function displayLoadingErrorMessage() {
 
 //get file from local resource directory
 function getResource(name) {
-    return "resources/"+name;
+    return "resources/" + name;
 }
 
 //get direction name for dir tag
 function getSimDir(dirTag) {
-    return dirTag.substring(dirTag.lastIndexOf("_")+1, dirTag.length);
+    return dirTag.substring(dirTag.lastIndexOf("_") + 1, dirTag.length);
 }
 
 //check if all xmls are loaded
 function checkLoadingStatus() {
     if (allPredXML === undefined || vechLocXML === undefined || routeDataXML === undefined) {
-        maxLoadingChecks = maxLoadingChecks-1;
-    }
-    else {
+        maxLoadingChecks = maxLoadingChecks - 1;
+    } else {
         doneLoading = true;
         createPage();
         lastRefreshComplete = true;
@@ -891,11 +956,11 @@ function checkLoadingStatus() {
 //check if new route xml is loaded
 function checkNewRouteLoadingStatus() {
     if (newRouteDataXML != oldRouteDataXML) {
-        getBranchData();
+        getBranchData(false);
+        getBranchData(true);
         displayBranchData();
-    }
-    else {
-        maxLoadingChecks = maxLoadingChecks-1
+    } else {
+        maxLoadingChecks = maxLoadingChecks - 1
     }
 }
 
@@ -907,16 +972,13 @@ function checkUpdatePredictionsLoadingStatus() {
         clearMapVehicles();
 
         getPredictions();
-        displayPredictions();
+        displayPredictions(true);
         getBusCords();
         updateMapVehicleLocations();
         lastRefreshComplete = true;
-        $("#progress").hide();
-        $(".loader").hide();
-        $(".loadingMessage").hide();
-    }
-    else {
-        maxLoadingChecks = maxLoadingChecks-1;
+        $("#loadingContainer").hide();
+    } else {
+        maxLoadingChecks = maxLoadingChecks - 1;
     }
 }
 
@@ -928,10 +990,8 @@ function checkUpdateByIdForPred() {
         if (allPredXML.getElementsByTagName("Error").length > 0) {
             if (allPredXML.getElementsByTagName("Error")[0].attributes.getNamedItem("shouldRetry").value === "false") {
                 console.log("GO BUTTON - Invalid Stop ID entered");
-                $(".inputMessage").text("Stop ID entered is Invalid");
-                $(".errorContainer").show();
-                $(".loader").hide();
-                $("#progress").hide();
+                displayInputError("Stop ID Entered Is Invalid");
+                $("#loadingContainer").hide();
                 return;
             }
         }
@@ -944,12 +1004,12 @@ function checkUpdateByIdForPred() {
 
         oldRouteDataXML = routeDataXML;
         getData("stop");
+        getData("simpleStop")
 
         maxLoadingChecks = 5;
         loadingCheckerInterval = setInterval(checkUpdateByIdForStop, 500);
-    }
-    else {
-        maxLoadingChecks = maxLoadingChecks-1;
+    } else {
+        maxLoadingChecks = maxLoadingChecks - 1;
     }
 }
 
@@ -957,57 +1017,62 @@ function checkUpdateByIdForPred() {
 function checkUpdateByIdForStop() {
     if (routeDataXML != oldRouteDataXML) {
 
-        getBranchData();
+        getBranchData(false);
+        getBranchData(true);
 
         searchForRouteTag:
-        for (var branch in branchData) {
-            var branchStopList = branchData[branch]["stops"]
+            for (var branch in branchData) {
+                var branchStopList = branchData[branch]["stops"]
 
-            for (var i = 0; i < branchStopList.length; i++) {
-                if (branchStopList[i] === stopTag ) {
-                    routeTag = branchData[branch]["tag"]
-                    break searchForRouteTag;
+                for (var i = 0; i < branchStopList.length; i++) {
+                    if (branchStopList[i] === stopTag) {
+                        routeTag = branchData[branch]["tag"]
+                        break searchForRouteTag;
+                    }
                 }
             }
-        }
 
         newRouteTag = routeTag;
         getData("stop");
+        getData("simpleStop");
         getData("vech");
         getData("predStopId");
 
         maxLoadingChecks = 5;
         loadingCheckerInterval = setInterval(checkLoadingStatus, 500);
+    } else {
+        maxLoadingChecks = maxLoadingChecks - 1
     }
-    else {
-        maxLoadingChecks = maxLoadingChecks-1
-    }
+    1
+}
+
+//display input error message
+function displayInputError(text) {
+    $(".inputMessage").text(text);
+    $(".errorContainer").show();
+    $(".errorContainer").get(0).scrollIntoView();
 }
 
 //go button clicked
 function goButtonClicked() {
+    $("#errorContainer").hide();
     $(".inputMessage").text("");
     if ($("#routeSelect").val() != 0 && $("#routeSelect").val() != 0 && $("#stopSelect").val() != 0) {
         if ($(".inputStopId").val() == "") {
             console.log("GO BUTTON - selector");
             setUpNewRoute();
             $(".errorContainer").hide();
-        }
-        else {
+        } else {
             console.log("GO BUTTON - more than one field selected");
-            $(".inputMessage").text("Only one field may be selected.");
-            $(".errorContainer").show();
+            displayInputError("Only one field may be selected.");
         }
-    }
-    else if ($(".inputStopId").val() != "") {
+    } else if ($(".inputStopId").val() != "") {
         console.log("GO BUTTON - stop id");
         newStopId = $(".inputStopId").val();
         setUpNewRouteById();
-    }
-    else {
+    } else {
         console.log("GO BUTTON - no info entered");
-        $(".inputMessage").text("No fields were completed");
-        $(".errorContainer").show();
+        displayInputError("No fields were completed");
     }
 }
 
@@ -1032,8 +1097,8 @@ function clearMapVehicles() {
 function zeroFill(num, width) {
     width -= num.toString().length;
     num = num + "";
-    for (i=0; i<width; i++) {
-        num = "0"+num;
+    for (i = 0; i < width; i++) {
+        num = "0" + num;
     }
     return num;
 }
@@ -1049,10 +1114,10 @@ function getTimeString(epochTime) {
     var ampm = hours >= 12 ? "PM" : "AM";
 
     hours = hours % 12;
-    hours = hours==0 ? 12 : hours;
+    hours = hours == 0 ? 12 : hours;
     minutes = zeroFill(minutes, 2);
 
-    var strTime = hours+":"+minutes+" " + ampm;
+    var strTime = hours + ":" + minutes + " " + ampm;
 
     return strTime;
 }
@@ -1061,17 +1126,13 @@ function getTimeString(epochTime) {
 function getDirection(degree) {
     if (degree > 315 || degree <= 45) {
         return "north";
-    }
-    else if (degree > 45 && degree <= 135) {
+    } else if (degree > 45 && degree <= 135) {
         return "east";
-    }
-    else if (degree > 135 && degree <= 225) {
+    } else if (degree > 135 && degree <= 225) {
         return "south";
-    }
-    else if (degree > 225 && degree <= 315) {
+    } else if (degree > 225 && degree <= 315) {
         return "west";
-    }
-    else {
+    } else {
         return "undefined";
     }
 }
@@ -1079,7 +1140,7 @@ function getDirection(degree) {
 //get direction of bus
 function getBusDirection(dirTag) {
     curDir = branchData[dirTag]["name"].toLowerCase();
-    return curDir+".png"
+    return curDir + ".png"
 }
 
 //auto refresh predictions
