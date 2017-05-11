@@ -1,15 +1,61 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="script.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <link rel="stylesheet" href="styles/main.css" />
+        <link rel="stylesheet" href="styles/w3.css" />
+        <title>Vehicle Predictions - Test</title>
+    </head>
 
-<head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="script.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="styles/main.css" />
-    <link rel="stylesheet" href="styles/w3.css" />
-    <title>Vehicle Predictions - Test</title>
-</head>
+    <body>
+        <audio autoplay="" muted="">
+            <source src="resources/chime.mp3" type="audio/mp3" />Your browser does not support the audio element.
+        </audio>
+        <div id="title" class="w3-container w3-teal">
+            <h1>TTC Bus &amp; Streetcar Predictions</h1>
+        </div>
+        <i class="loader fa fa-refresh fa-spin" id="loadSpinnerNormal"></i>
+        <div class="errorContainer w3-panel w3-red w3-card-4 w3-display-container" style="display:none">
+            <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-center w3-red w3-display-topright" style="height:100%; vertical-align:middle">&times;</span>
+            <p class="errorMessage inputMessage" style="color:white; font-size:16px; font-weight:bold"></p>
+        </div>
+        <p class="loadingMessage"></p>
+        <div class="w3-panel w3-pale-yellow w3-leftbar w3-border-yellow w3-display-container">
+            <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-center w3-yellow w3-display-topright" style="height:100%; vertical-align:middle">&times;</span>
+            <p>Use ONE of the two options below to select a stop and click GO to get predictions.</p>
+        </div>
+        <br />
+        <div class="w3-container w3-margin w3-card-4 w3-teal">
+            <h2>Select a Stop</h2>
+            <form class="w3-container w3-card w3-margin w3-hover-shadow w3-light-grey">
+                <h3>By Route</h3>
+                <select class="w3-select w3-animate-input w3-hover-grey" name="option" id="routeSelect" style="width:15%">
+                    <option value="">Select Route</option>
+                </select>
+                <select class="w3-select w3-animate-input w3-hover-grey" name="option" id="branchSelect" style="width:40%">
+                    <option value="0">Select Branch</option>
+                </select>
+                <select class="w3-select w3-animate-input w3-hover-grey" name="option" id="stopSelect" style="width:40%">
+                    <option value="0">Select Stop</option>
+                </select>
+                <br>
+                <input class="w3-check w3-section" type="checkbox" id="displayOnlyThisRoute" />Only Display Predictions for this Route at this Stop
+                <br>
+                <button class="w3-btn w3-teal w3-section" id="clearByRoute">Clear</button>
+            </form>
+            <form class="w3-container w3-card w3-margin w3-hover-shadow w3-light-grey">
+                <h3>By Stop Number</h3> Stop ID:
+                <input class="inputStopId w3-input w3-animate-input w3-hover-grey" type="number" style="width:30%"/>
+                <button class="w3-btn w3-teal w3-section" id="clearByStopId">Clear</button>
+            </form>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="default">Default</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="reset">Reset</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="go">Go</button>
+        </div>
 
+<<<<<<< HEAD
 <body>
     <audio autoplay="" muted="">
         <source src="resources/chime.mp3" type="audio/mp3" />Your browser does not support the audio element.
@@ -52,13 +98,16 @@
         <button class="w3-btn w3-teal" id="reset">Reset</button>
         <button class="w3-btn w3-teal" id="go">Go</button>
     </div>
-    <p class="errorMessage inputMessage"></p>
-    <hr id="predictionDiv" />
-    <div id="predictions" style="padding:20px;"></div>
-    <button id="refresh">Refresh</button>
-    <hr id="mapDiv" />
-    <div id="map" style="width:400px; height:400px; background:yellow"></div>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
-    <small>Click on Red Pin to Reset View</small></body>
 
+        <button class="w3-btn w3-teal w3-margin" id="refresh">Refresh</button>
+
+        <div class="w3-container w3-margin w3-card w3-hover-shadow w3-teal w3-row">
+            <div id="predictions" style="padding:20px;" class="w3-col l7"></div>
+            <div class="w3-col l5">
+                <div id="map" class="w3-margin" style="width:400px; height:400px; background:yellow"></div>
+                <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
+                <p class="w3-margin">Click on Red Pin to Reset View</p>
+            </div>
+        </div>
+    </body>
 </html>

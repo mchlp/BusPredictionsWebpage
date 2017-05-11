@@ -86,6 +86,8 @@ var newStopId = "0466";
 var stopTag = "";
 //stop tag newly selected
 var newStopTag = "1638";
+//current location
+var curLocation = [];
 
 //when document is ready
 $(document).ready(pageReady);
@@ -94,24 +96,65 @@ $(document).ready(pageReady);
 function pageReady() {
     //button press
     $("button").click(buttonPress);
-    
+
     //route select changed
     $("select").change(selectChange);
-    
+
+    //get location
+    getLocation();
+
     //load all route data
     getData("route");
-    
+
     //refresh page display
     setUpNewRoute();
-} 
+}
+
+//get location
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(processLocation, showError);
+    }
+    else {
+        $(".inputMessage").text("Geolocation is not supported by this browser.");
+        $(".errorContainer").show();
+    }
+}
+
+//process location
+function processLocation(position) {
+    curLocation["lat"] = position.coords.latitude;
+    curLocation["lon"] = position.coords.longitude;
+    alert(curLocation["lat"]);
+
+}
+
+//location error
+function showError(error) {
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            $(".inputMessage").text("Request For Geolocation Was Denied.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            $(".inputMessage").text("Location Information Is Unavailable.");
+            break;
+        case error.TIMEOUT:
+            $(".inputMessage").text("Request To Get User Location Timed Out.");
+            break;
+        case error.UNKNOWN_ERROR:
+            $(".inputMessage").text("An Unknown Error Occurred.");
+            break;
+    }
+    $(".errorContainer").show();
+}
 
 //button pressed
 function buttonPress() {
     //id of button pressed
     var buttonID = this.id;
-    
+
 	switch (buttonID) {
-		
+
 		case "refresh":
 			if (lastRefreshComplete) {
                 $("#progress").show();
@@ -123,31 +166,31 @@ function buttonPress() {
 				alert("The page is still being refreshed.");
 			}
 			break;
-	
+
 	case "go":
         //clear auto refresher
         clearInterval(autoRefreshInterval);
-        
+
         goButtonClicked();
 		break;
-    
+
     case "default":
         //clear auto refresher
         clearInterval(autoRefreshInterval);
-        
+
         newRoute = "17";
         newRouteTag = "17_0_17A";
         newStopId = "0466";
         newStopTag = "1638"
         setUpNewRoute();
 		break;
-		
+
 	case "reset":
 		$(".inputStopId").val("");
 		$("#routeSelect").val(0);
 		selectChange();
         break;
-    
+
     case "clearByStopId":
         $(".inputStopId").val("");
         break;
@@ -160,16 +203,16 @@ function buttonPress() {
 
 //selector changed
 function selectChange() {
-    console.log("selector change - " + this.id); 
+    console.log("selector change - " + this.id);
 	var selectID = this.id;
 	console.log(selectID);
 	if (selectID === undefined) {
 		selectID = "routeSelect";
 	}
-    
+
     //clear auto refresher
     clearInterval(autoRefreshInterval);
-    
+
     switch (selectID) {
         case "routeSelect":
             newRoute = $("#routeSelect").val();
@@ -182,13 +225,13 @@ function selectChange() {
                 displayStopData("clear");
             }
             break;
-        
+
         case "branchSelect":
             newRouteTag = $("#branchSelect").val();
             getStopData("new");
             displayStopData();
             break;
-        
+
         case "stopSelect":
             if ($("#branchSelect").val() != 0) {
                 newStopTag = $("#stopSelect").val();
@@ -201,25 +244,25 @@ function selectChange() {
 //refresh predictions & map
 function refreshPredictions() {
     now = new Date().getTime();
-    
+
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
-        
+
         //set last reload time
         lastReloadTime = now;
-        
+
         //set reload complete flag to false
         lastRefreshComplete = false;
 
         //keep old predictions and vehicle locations data to verify new data has been retrived
         oldAllPredXML = allPredXML;
         oldVechLocXML = vechLocXML;
-        
+
         //check for resource loading & timeout
         window.setTimeout(displayLoadingErrorMessage, 3000);
-        
+
         getData("vech");
-        
+
         //arrival stop, does not have stop id
         if (stopTag.indexOf("_ar") == -1) {
             console.log("refresh by stopId - ar");
@@ -231,44 +274,44 @@ function refreshPredictions() {
         }
 
         maxLoadingChecks = 5;
-        loadingCheckerInterval = setInterval(checkUpdatePredictionsLoadingStatus, 500); 
+        loadingCheckerInterval = setInterval(checkUpdatePredictionsLoadingStatus, 500);
     }
 }
 
 //new route chosen
 function setUpNewRoute() {
-    
+
     now = new Date().getTime();
-    
+
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
-    
+
         console.log("set up new route - by tag")
         $("#progress").show();
         $(".loader").show();
         $(".loader").attr("id", "loadSpinnerNormal");
-    
+
         //set last reload time
         lastReloadTime = now;
-        
+
         //set reload complete flag to false
         lastRefreshComplete = false;
-        
-        //loading message 
+
+        //loading message
         $(".loadingMessage").text("Loading...").show();
 
         //check for resource loading & timeout
         window.setTimeout(displayLoadingErrorMessage, 3000);
-        
+
         //update stop settings
         routeTag = newRouteTag;
         stopId = newStopId;
         stopTag = newStopTag;
         route = newRoute;
 
-        getData("stop"); 
+        getData("stop");
         getData("vech");
-        
+
         if (stopTag.indexOf("_ar") == -1) {
             console.log("refresh by stopId - ar");
             getData("predStopId");
@@ -277,9 +320,9 @@ function setUpNewRoute() {
             console.log("refresh by stopTag - normal");
             getData("predStopTag");
         }
-        
+
         maxLoadingChecks = 5;
-        loadingCheckerInterval = setInterval(checkLoadingStatus, 500); 
+        loadingCheckerInterval = setInterval(checkLoadingStatus, 500);
     }
 }
 
@@ -287,34 +330,34 @@ function setUpNewRoute() {
 function setUpNewRouteById() {
 
     now = new Date().getTime();
-    
+
     //prevent page from being reloaded too quickly (will cause page to crash)
     if (Math.abs(lastReloadTime-now) > 500 || isNaN(lastReloadTime-now)) {
-    
+
         console.log("set up new route - by id")
         $(".loader").show();
         $(".loader").attr("id", "loadSpinnerNormal");
-    
+
         //set last reload time
         lastReloadTime = now;
-        
+
         //set reload complete flag to false
         lastRefreshComplete = false;
-        
-        //loading message 
+
+        //loading message
         $(".loadingMessage").text("Loading...").show();
 
         //check for resource loading & timeout
         window.setTimeout(displayLoadingErrorMessage, 3000);
-        
+
         //update by id
         stopId = newStopId;
-        
+
         oldAllPredXML = allPredXML;
         getData("predStopId");
-        
+
         maxLoadingChecks = 5;
-        loadingCheckerInterval = setInterval(checkUpdateByIdForPred, 500); 
+        loadingCheckerInterval = setInterval(checkUpdateByIdForPred, 500);
     }
 }
 
@@ -322,12 +365,12 @@ function setUpNewRouteById() {
 function createPage() {
 
     clearInterval(loadingCheckerInterval);
-    
+
     getRouteCords();
     getBusCords();
     getStopData("start");
     getStopLocation();
-    
+
     getAllRoutes();
     displayAllRoutes();
 
@@ -336,23 +379,23 @@ function createPage() {
 
     getBranchData();
     displayBranchData();
-        
+
     displayStopData();
 
     $(".loadingMessage").hide();
     doneLoading = true;
-    
+
     //set default values on selectors
     $("#routeSelect")[0].value = route;
     $("#branchSelect")[0].value = routeTag;
     $("#stopSelect")[0].value = newStopTag;
-    
+
     //create map
     createMap();
-    
+
     //create auto refresher
-    autoRefreshInterval = setInterval(autoRefreshPredictions, 5000); 
-    
+    autoRefreshInterval = setInterval(autoRefreshPredictions, 5000);
+
     $(".loader").hide();
     $("#progress").hide();
 }
@@ -362,7 +405,7 @@ function createMap() {
     //clear map
     $("#map").html("");
     clearMap();
-    
+
     //properties
     var defaultZoom = 14;
 
@@ -375,7 +418,7 @@ function createMap() {
         streetViewControl: false
     };
     map = new google.maps.Map(mapCanvas, mapProp);
-    
+
     //stop marker
     var stopMarkerProp = {
         position: mapCenter,
@@ -385,7 +428,7 @@ function createMap() {
     var stopMarker = new google.maps.Marker(stopMarkerProp);
     stopMarker.setMap(map);
     mapObjects.push(stopMarker);
-    
+
     //route lines
     for (var i=0; i<routeCords.length; i++) {
         var routeLineProp = {
@@ -398,18 +441,18 @@ function createMap() {
         routeLine.setMap(map);
         mapObjects.push(routeLine);
     }
-    
+
     //bus locations
     updateMapVehicleLocations();
-    
+
     //click on marker to reset zoom
     google.maps.event.addListener(stopMarker, 'click', function() {
         map.setZoom(defaultZoom);
         map.setCenter(stopMarker.getPosition());
     });
-    
+
     routeCords.length = 0;
-    busData.length = 0; 
+    busData.length = 0;
 }
 
 //update the vehicle locations on map
@@ -418,7 +461,7 @@ function updateMapVehicleLocations() {
     for (var i=0; i<busData.length; i++) {
         var curBus = busData[i];
         var icon = getResource(getBusDirection(curBus["dirTag"]));
-        
+
         var busMarkerProp = {
             position: busData[i]["coord"],
             //icon: getResource("bus-station.png"),
@@ -426,7 +469,7 @@ function updateMapVehicleLocations() {
             title: busData[i]["id"]+" - "+busData[i]["dirTag"]
             //animation: google.maps.Animation.BOUNCE
         };
-        
+
         var busMarker = new google.maps.Marker(busMarkerProp);
         busMarker.setMap(map);
         mapObjects.push(busMarker);
@@ -438,23 +481,23 @@ function updateMapVehicleLocations() {
 function getAllRoutes() {
     getDataList = ["tag", "title"];
     allRoutes = allRouteDataXML.getElementsByTagName("route");
-    
+
     for (var i=0; i<allRoutes.length; i++) {
         curAllRouteData = [];
-        
+
         for (var j=0; j<getDataList.length; j++) {
             curAllRouteData[getDataList[j]] = allRoutes[i].attributes.getNamedItem(getDataList[j]).nodeValue;
         }
-            
+
         allRouteData.push(curAllRouteData);
     }
 }
 
 //display all routes
 function displayAllRoutes() {
-    
+
     $("#routeSelect").empty();
-    
+
     $("#routeSelect").append($("<option>", {
         value: 0,
         text: "Select Route"
@@ -472,31 +515,31 @@ function displayAllRoutes() {
 //get a list of the predictions
 function getPredictions() {
     predData.length = 0;
-    
+
     var allPredictions = allPredXML.getElementsByTagName("predictions");
-    
+
     for (var h=0; h<allPredictions.length; h++) {
         var getDataList = ["agencyTitle", "routeTitle", "routeTag", "stopTitle", "stopTag"];
         var predictions = allPredictions[h];
         var thisPredData = [];
         var thisPredictionDirectionData = [];
-        
+
         for (var i = 0; i < getDataList.length; i++) {
             thisPredData[getDataList[i]] = predictions.attributes.getNamedItem(getDataList[i]).nodeValue;
         }
-        
+
         var getDataList = ["isDeparture", "branch", "dirTag", "vehicle", "block", "tripTag"];
         var predDirectionData = [];
         allPredBranches = predictions.getElementsByTagName("direction");
-        
+
         for (var i = 0; i < allPredBranches.length; i++) {
             curPredBranch = allPredBranches[i];
             curPredBranchData = [];
             curPredBranchData["title"] = curPredBranch.attributes.getNamedItem("title");
-            
+
             curPredBranchPredictions = [];
             branchPreds = curPredBranch.children;
-            
+
             for (var j = 0; j<branchPreds.length; j++) {
                 curPredData = [];
                 curPred = branchPreds[j];
@@ -504,20 +547,20 @@ function getPredictions() {
                 for (var k=0; k<getDataList.length; k++) {
                     curPredData[getDataList[k]] = curPred.attributes.getNamedItem(getDataList[k]).nodeValue;
                 }
-                
+
                 curPredData["epochTime"] = Number(curPred.attributes.getNamedItem("epochTime").nodeValue);
-                
+
                 curPredData["minutes"] = zeroFill(Number(curPred.attributes.getNamedItem("minutes").nodeValue), 0);
                 curPredData["seconds"] = zeroFill(Number(curPred.attributes.getNamedItem("seconds").nodeValue)%60, 2);
                 curPredData["simDir"] = getSimDir(curPredData["dirTag"]);
-                
+
                 curPredData["timeStr"] = getTimeString(curPredData["epochTime"]);
-                
+
                 curPredBranchPredictions.push(curPredData);
             }
             curPredBranchData["predictions"] = curPredBranchPredictions;
             thisPredictionDirectionData.push(curPredBranchData);
-            
+
         }
         thisPredData["data"] = thisPredictionDirectionData
         predData.push(thisPredData);
@@ -529,41 +572,41 @@ function displayPredictions() {
 
     $("#predictions").empty();
     var allPredDirectionData = predData;
-    
+
     var predStopTitle = allPredDirectionData[0]["stopTitle"];
     var predStopTag = allPredDirectionData[0]["stopTag"];
-    
+
     $("<h2></h2>").html(predStopTitle).appendTo("#predictions");
     $("<strong></strong>").html("Stop ID: " + stopId).appendTo("#predictions");
-    
+
     for (var h=0; h < allPredDirectionData.length; h++) {
- 
+
         var thisPredData = allPredDirectionData[h];
-        
-        if ((!$("#displayOnlyThisRoute")[0].checked) || ($("#displayOnlyThisRoute")[0].checked 
+
+        if ((!$("#displayOnlyThisRoute")[0].checked) || ($("#displayOnlyThisRoute")[0].checked
                                     && thisPredData["routeTag"] === route)) {
-            
+
             var predDirectionData = thisPredData["data"];
-            
+
             for (var i=0; i<predDirectionData.length; i++) {
-                
+
                 curDisplayPredBranch = predDirectionData[i];
-                
+
                 curDisplayPredBranchTitle = predDirectionData[i]["title"].nodeValue;
                 curDisplayPredBranchPredictions = predDirectionData[i]["predictions"];
-                
+
                 $("<h3></h3>").html(curDisplayPredBranchTitle).appendTo("#predictions");
-               
+
                 for (var j=0; j<curDisplayPredBranchPredictions.length; j++) {
                     curPredData = curDisplayPredBranchPredictions[j];
-                    $("<li></li>").html(curPredData["branch"] + " - " + curPredData["vehicle"] + " - in " + 
-                        curPredData["minutes"] + " min " + curPredData["seconds"] + " sec - " + 
+                    $("<li></li>").html(curPredData["branch"] + " - " + curPredData["vehicle"] + " - in " +
+                        curPredData["minutes"] + " min " + curPredData["seconds"] + " sec - " +
                         curPredData["timeStr"]).appendTo("#predictions");
                 }
             }
         }
     }
-}    
+}
 
 //get locations of stops - FIX
 function getStopLocation() {
@@ -589,11 +632,11 @@ function getStopData(type) {
     if (type == "new") {
         var allStops = newRouteDataXML.getElementsByTagName("route")[0].children;
     }
-    
+
     var getDataList = ["tag", "title", "lat", "lon", "stopId"]
-    
+
     for (var i=0; i<allStops.length; i++) {
-        
+
         var curStop = allStops[i];
         var curStopData = [];
 
@@ -614,17 +657,17 @@ function getStopData(type) {
 function displayStopData(type) {
 
     $("#stopSelect").empty();
-    
+
     $("#stopSelect").append($("<option>", {
         value: 0,
         text: "Select Stop"
     }));
-    
+
     if (type != "clear") {
-    
+
         var curBranch = branchData[newRouteTag];
         curBranchStopList = curBranch["stops"];
-    
+
         for (var i = 0; i<curBranchStopList.length; i++) {
             curBranchStopTag = curBranchStopList[i]
             curBranchStop = newStopData[curBranchStopTag];
@@ -644,21 +687,21 @@ function getBranchData() {
     branchData = [];
     var getDataList = ["title", "name", "branch", "tag", "useForUI"];
     var allDirections = newRouteDataXML.getElementsByTagName("direction");
-    
+
     for (var i=0; i<allDirections.length; i++) {
         //route data
         var curDir = allDirections[i];
         //var curDirTag = curDir.attributes.getNamedItem("tag").nodeValue;
         var curDirData = [];
-        
+
         for (var j=0; j<getDataList.length; j++) {
             curDirData[getDataList[j]] = curDir.attributes.getNamedItem(getDataList[j]).nodeValue;
         }
-        
+
         //route stop data
         var curDirStops = curDir.children;
         var curDirStopsList = [];
-        
+
         for (var j=0; j<curDirStops.length; j++) {
             curDirStopsList.push(curDirStops[j].attributes.getNamedItem("tag").nodeValue);
         }
@@ -671,16 +714,16 @@ function getBranchData() {
 //display list for each direction of route
 function displayBranchData() {
     $("#branchSelect").empty();
-    
+
     $("#branchSelect").append($("<option>", {
         value: 0,
         text: "Select Branch"
     }));
-    
+
     //for (var i = 0; i < branchData.length; i++) {
-    
+
     //branchData.forEach(function(curBranch, index) {
-    
+
     for (var curBranchName in branchData) {
         curBranch = branchData[curBranchName];
         $("#branchSelect").append($("<option>", {
@@ -693,11 +736,11 @@ function displayBranchData() {
 //get coordinates for the route path
 function getRouteCords() {
     var allPaths = routeDataXML.getElementsByTagName("path");
-    
+
     for (var i=0; i<allPaths.length; i++) {
         var sectionCords = []
         var cordsInPath = allPaths[i].getElementsByTagName("point");
-        
+
         for (var j=0; j<cordsInPath.length; j++) {
             var lat = Number(cordsInPath[j].attributes.getNamedItem("lat").nodeValue);
             var lon = Number(cordsInPath[j].attributes.getNamedItem("lon").nodeValue);
@@ -711,23 +754,23 @@ function getRouteCords() {
 function getBusCords() {
     var allVech = vechLocXML.getElementsByTagName("vehicle");
     var getDataList = ["id", "dirTag", "lat", "lon", "heading", "secsSinceReport"];
-    
+
     findAllVehicles:
     for (var i=0; i<allVech.length; i++) {
         var vech = allVech[i]
         if (vech.attributes.getNamedItem("predictable").nodeValue == "true" && vech.attributes.getNamedItem("heading").nodeValue >= 0) {
             curVechData = [];
-        
+
             for (var j=0; j<getDataList.length; j++) {
                 //console.log(getDataList[j]);
                 if (getDataList[j] in vech.attributes) {
-                    curVechData[getDataList[j]] = vech.attributes.getNamedItem(getDataList[j]).nodeValue;   
+                    curVechData[getDataList[j]] = vech.attributes.getNamedItem(getDataList[j]).nodeValue;
                 }
                 else {
                     continue findAllVehicles;
                 }
             }
-            
+
             curVechData["simDir"] = getSimDir["dirTag"];
             curVechData["coord"] = new google.maps.LatLng(curVechData["lat"], curVechData["lon"]);
             busData.push(curVechData);
@@ -764,7 +807,7 @@ function parseXML(data, type) {
 function getData(type){
 
     var url;
-    
+
     switch (type) {
         case "stop":
             url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r="+route+"&verbose";
@@ -786,22 +829,22 @@ function getData(type){
             url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r="+newRoute;
             break;
     }
-    
+
     /*
     var xhttp = new XMLHttpRequest();
-    
+
     //xhttp.withCredentials = true;
     xhttp.open("GET", url, true);
-    
+
     xhttp.onload = function() {
         if (this.readyState == 4 && this.status == 200) {
             parseXML(this.responseXML, type);
         }
     };
-    
+
     xhttp.send();
     */
-    
+
     $.ajax({
         type: "GET",
         url: url,
@@ -833,7 +876,7 @@ function getSimDir(dirTag) {
     return dirTag.substring(dirTag.lastIndexOf("_")+1, dirTag.length);
 }
 
-//check if all xmls are loaded 
+//check if all xmls are loaded
 function checkLoadingStatus() {
     if (allPredXML === undefined || vechLocXML === undefined || routeDataXML === undefined) {
         maxLoadingChecks = maxLoadingChecks-1;
@@ -860,9 +903,9 @@ function checkNewRouteLoadingStatus() {
 function checkUpdatePredictionsLoadingStatus() {
     if (allPredXML != oldAllPredXML && vechLocXML != oldVechLocXML) {
         clearInterval(loadingCheckerInterval);
-        
+
         clearMapVehicles();
-        
+
         getPredictions();
         displayPredictions();
         getBusCords();
@@ -881,28 +924,29 @@ function checkUpdatePredictionsLoadingStatus() {
 function checkUpdateByIdForPred() {
     if (allPredXML != oldAllPredXML) {
         clearInterval(loadingCheckerInterval);
-        
+
         if (allPredXML.getElementsByTagName("Error").length > 0) {
             if (allPredXML.getElementsByTagName("Error")[0].attributes.getNamedItem("shouldRetry").value === "false") {
                 console.log("GO BUTTON - Invalid Stop ID entered");
                 $(".inputMessage").text("Stop ID entered is Invalid");
+                $(".errorContainer").show();
                 $(".loader").hide();
                 $("#progress").hide();
                 return;
             }
         }
-        
+
         newStopTag = allPredXML.getElementsByTagName("predictions")[0].attributes.getNamedItem("stopTag").value;
         newRoute = allPredXML.getElementsByTagName("predictions")[0].attributes.getNamedItem("routeTag").value;
-        
+
         stopTag = newStopTag;
         route = newRoute;
-        
+
         oldRouteDataXML = routeDataXML;
         getData("stop");
-                
+
         maxLoadingChecks = 5;
-        loadingCheckerInterval = setInterval(checkUpdateByIdForStop, 500); 
+        loadingCheckerInterval = setInterval(checkUpdateByIdForStop, 500);
     }
     else {
         maxLoadingChecks = maxLoadingChecks-1;
@@ -912,13 +956,13 @@ function checkUpdateByIdForPred() {
 //check if new predictions are loaded for route update by ID (part 2 - route info)
 function checkUpdateByIdForStop() {
     if (routeDataXML != oldRouteDataXML) {
-        
+
         getBranchData();
-        
+
         searchForRouteTag:
         for (var branch in branchData) {
             var branchStopList = branchData[branch]["stops"]
-            
+
             for (var i = 0; i < branchStopList.length; i++) {
                 if (branchStopList[i] === stopTag ) {
                     routeTag = branchData[branch]["tag"]
@@ -926,14 +970,14 @@ function checkUpdateByIdForStop() {
                 }
             }
         }
-        
+
         newRouteTag = routeTag;
-        getData("stop"); 
+        getData("stop");
         getData("vech");
         getData("predStopId");
-        
+
         maxLoadingChecks = 5;
-        loadingCheckerInterval = setInterval(checkLoadingStatus, 500); 
+        loadingCheckerInterval = setInterval(checkLoadingStatus, 500);
     }
     else {
         maxLoadingChecks = maxLoadingChecks-1
@@ -947,21 +991,23 @@ function goButtonClicked() {
         if ($(".inputStopId").val() == "") {
             console.log("GO BUTTON - selector");
             setUpNewRoute();
+            $(".errorContainer").hide();
         }
         else {
             console.log("GO BUTTON - more than one field selected");
             $(".inputMessage").text("Only one field may be selected.");
+            $(".errorContainer").show();
         }
     }
     else if ($(".inputStopId").val() != "") {
         console.log("GO BUTTON - stop id");
         newStopId = $(".inputStopId").val();
-        
         setUpNewRouteById();
     }
     else {
         console.log("GO BUTTON - no info entered");
         $(".inputMessage").text("No fields were completed");
+        $(".errorContainer").show();
     }
 }
 
@@ -994,20 +1040,20 @@ function zeroFill(num, width) {
 
 //add time
 function getTimeString(epochTime) {
-    
+
     var newDate = new Date(epochTime);
 
     var hours = newDate.getHours();
     var minutes = newDate.getMinutes();
-    
+
     var ampm = hours >= 12 ? "PM" : "AM";
-    
+
     hours = hours % 12;
-    hours = hours==0 ? 12 : hours; 
+    hours = hours==0 ? 12 : hours;
     minutes = zeroFill(minutes, 2);
-    
+
     var strTime = hours+":"+minutes+" " + ampm;
-    
+
     return strTime;
 }
 
