@@ -24,17 +24,17 @@
         <p>Use ONE of the two options below to select a stop and click GO to get predictions.</p>
     </div>
     <br />
-    <div class="w3-container w3-margin w3-card-4 w3-teal">
+    <div class="w3-container w3-margin w3-card-4 w3-teal w3-row">
         <h2>Select a Stop</h2>
-        <form class="w3-container w3-card w3-hover-shadow w3-light-grey">
+        <form class="w3-col s6 w3-container w3-margins w3-card w3-hover-shadow w3-light-grey">
             <h3>By Route</h3>
-            <select class="w3-select w3-animate-input w3-hover-grey" name="option" id="routeSelect" style="width:15%">
+            <select class="w3-select w3-animate-input w3-hover-light-grey" name="option" id="routeSelect" style="width:15%">
                 <option value="">Select Route</option>
             </select>
-            <select class="w3-select w3-animate-input w3-hover-grey" name="option" id="branchSelect" style="width:40%">
+            <select class="w3-select w3-animate-input w3-hover-light-grey" name="option" id="branchSelect" style="width:40%">
                 <option value="0">Select Branch</option>
             </select>
-            <select class="w3-select w3-animate-input w3-hover-grey" name="option" id="stopSelect" style="width:40%">
+            <select class="w3-select w3-animate-input w3-hover-light-grey" name="option" id="stopSelect" style="width:40%">
                 <option value="0">Select Stop</option>
             </select>
             <br>
@@ -43,9 +43,9 @@
             <button class="w3-btn w3-teal w3-section" id="clearByRoute">Clear</button>
         </form>
         <strong>OR</strong>
-        <form class="w3-container w3-card w3-hover-shadow w3-light-grey">
+        <form class=" w3-col s6 w3-container w3-margins w3-card w3-hover-shadow w3-light-grey">
             <h3>By Stop Number</h3> Stop ID:
-            <input class="inputStopId w3-input w3-animate-input w3-hover-grey" type="number" style="width:30%"/>
+            <input class="inputStopId w3-input w3-animate-input w3-hover-light-grey" type="number" style="width:30%"/>
             <button class="w3-btn w3-teal w3-section" id="clearByStopId">Clear</button>
         </form>
         <button class="w3-btn w3-teal" id="default">Default</button>
