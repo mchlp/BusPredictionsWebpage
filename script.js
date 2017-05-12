@@ -36,6 +36,8 @@ var vechLocXML;
 var simpleRouteDataXML;
 //xml for information on all routes
 var allRouteDataXML;
+//xml for full route data
+var fullBranchDataXML;
 
 //current xml for route information
 var routeDataXML;
@@ -59,8 +61,12 @@ var routeCords = [];
 var busData = [];
 //data for branches of the route
 var branchData = [];
+//data for branch with verbose, all detailed routes
+var fullBranchData = [];
 //data for simple branches of the route
 var simpleBranchData = [];
+//data for the branch selector input
+var selectorBranchData = [];
 //data for stops on the route being predicted
 var stopData = [];
 //data for stops for route in selector
@@ -419,10 +425,16 @@ function createPage() {
     getPredictions();
     displayPredictions(false);
 
-    getBranchData(false);
-    getBranchData(true);
-    displayBranchData();
+    getBranchData("regular");
+    getBranchData("simple");
+    getBranchData("full");
+    if ($("#displayDetailedBranches").is(':checked')) {
+        selectorBranchData = branchData;
+    } else {
+        selectorBranchData = simpleBranchData;
+    }
 
+    displayBranchData();
     displayStopData();
 
     $(".loadingMessage").hide();
@@ -727,13 +739,16 @@ function displayStopData(type) {
 }
 
 //get data for each direction of route & clear interval
-function getBranchData(simple) {
+function getBranchData(type) {
 
     clearInterval(loadingCheckerInterval);
 
-    if (simple) {
+    if (type == "simple") {
         simpleBranchData = [];
         var allDirections = simpleRouteDataXML.getElementsByTagName("direction");
+    } else if (type == "full") {
+        fullBranchData = [];
+        var allDirections = fullBranchDataXML.getElementsByTagName("direction");
     } else {
         branchData = [];
         var allDirections = newRouteDataXML.getElementsByTagName("direction");
@@ -760,8 +775,10 @@ function getBranchData(simple) {
         }
         curDirData["stops"] = curDirStopsList;
         //branchData[curDirTag] = curDirData;
-        if (simple) {
+        if (type == "simple") {
             simpleBranchData[curDirData["tag"]] = curDirData;
+        } else if (type == "full") {
+            fullBranchData[curDirData["tag"]] = curDirData;
         } else {
             branchData[curDirData["tag"]] = curDirData;
         }
@@ -777,12 +794,6 @@ function displayBranchData() {
         text: "Select Branch"
     }));
 
-    if ($("#displayDetailedBranches").is(':checked')) {
-        selectorBranchData = branchData;
-    } else {
-        selectorBranchData = simpleBranchData;
-    }
-
     for (var curBranchName in selectorBranchData) {
         curBranch = selectorBranchData[curBranchName];
         $("#branchSelect").append($("<option>", {
@@ -794,6 +805,7 @@ function displayBranchData() {
 
 //get coordinates for the route path
 function getRouteCords() {
+    routeCords = [];
     var allPaths = routeDataXML.getElementsByTagName("path");
 
     for (var i = 0; i < allPaths.length; i++) {
@@ -813,6 +825,7 @@ function getRouteCords() {
 function getBusCords() {
     var allVech = vechLocXML.getElementsByTagName("vehicle");
     var getDataList = ["id", "dirTag", "lat", "lon", "heading", "secsSinceReport"];
+    busData = [];
 
     findAllVehicles:
         for (var i = 0; i < allVech.length; i++) {
@@ -842,9 +855,12 @@ function parseXML(data, type) {
     switch (type) {
         case "simpleStop":
             simpleRouteDataXML = data;
+            break;
         case "stop":
+            console.log(data)
             routeDataXML = data;
             newRouteDataXML = data;
+            fullBranchDataXML = data;
             newRouteReady = true;
             break;
         case "vech":
@@ -859,7 +875,6 @@ function parseXML(data, type) {
             break;
         case "new":
             newRouteDataXML = data;
-            simpleRouteDataXML = data;
             newRouteReady = true;
     }
 }
@@ -890,7 +905,11 @@ function getData(type) {
             url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeList&a=ttc";
             break;
         case "new":
-            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + newRoute;
+            if ($("#displayDetailedBranches").is(':checked')) {
+                url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + newRoute + "&verbose";
+            } else {
+                url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + newRoute
+            }
             break;
     }
 
@@ -956,11 +975,14 @@ function checkLoadingStatus() {
 //check if new route xml is loaded
 function checkNewRouteLoadingStatus() {
     if (newRouteDataXML != oldRouteDataXML) {
-        getBranchData(false);
-        getBranchData(true);
+        getBranchData("regular");
+        selectorBranchData = branchData;
         displayBranchData();
     } else {
         maxLoadingChecks = maxLoadingChecks - 1
+        if (maxLoadingChecks < 0) {
+            displayInputError("Unable to Load Branch Data");
+        }
     }
 }
 
@@ -1017,8 +1039,8 @@ function checkUpdateByIdForPred() {
 function checkUpdateByIdForStop() {
     if (routeDataXML != oldRouteDataXML) {
 
-        getBranchData(false);
-        getBranchData(true);
+        getBranchData("regular");
+        getBranchData("simple");
 
         searchForRouteTag:
             for (var branch in branchData) {
@@ -1081,7 +1103,7 @@ function clearMap() {
     for (var i = 0; i < mapObjects.length; i++) {
         mapObjects[i].setMap(null);
     }
-    mapObjects.length = 0;
+    mapObjects = [];
 }
 
 //clear vehicles from map
@@ -1139,7 +1161,7 @@ function getDirection(degree) {
 
 //get direction of bus
 function getBusDirection(dirTag) {
-    curDir = branchData[dirTag]["name"].toLowerCase();
+    curDir = fullBranchData[dirTag]["name"].toLowerCase();
     return curDir + ".png"
 }
 
