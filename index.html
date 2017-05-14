@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="script.js"></script>
@@ -34,50 +35,56 @@
     <br />
     <div class="w3-container w3-margin w3-card-4 w3-teal">
         <h2>Select a Stop</h2>
-        <form class="w3-container w3-card w3-margin w3-hover-shadow w3-light-grey">
-            <h3>By Route</h3>
-            <select class="w3-select w3-hover-grey w3-round" name="option" id="routeSelect" style="width:15%">
+        <div class="w3-row">
+            <div class="w3-container w3-half w3-card w3-hover-shadow w3-margin-right w3-light-grey w3-left">
+                <h3>By Route</h3>
+                <select class="w3-select w3-hover-grey w3-round" name="option" id="routeSelect">
                     <option value="">Select Route</option>
                 </select>
-            <select class="w3-select w3-hover-grey w3-round" name="option" id="branchSelect" style="width:40%">
+                <br>
+                <select class="w3-select w3-hover-grey w3-round" name="option" id="branchSelect">
                     <option value="0">Select Branch</option>
                 </select>
-            <select class="w3-select w3-hover-grey w3-round" name="option" id="stopSelect" style="width:40%">
+                <br>
+                <select class="w3-select w3-hover-grey w3-round" name="option" id="stopSelect">
                     <option value="0">Select Stop</option>
                 </select>
-            <br>
-            <div class="advancedOption w3-margin-top">
-                <input class="w3-check" type="checkbox" id="displayOnlyThisRoute">
-                <label>Only Display Predictions for this Route at this Stop</label>
                 <br>
-            </div>
+                <div class="advancedOption w3-margin-top">
+                    <input class="w3-check" type="checkbox" id="displayOnlyThisRoute">
+                    <label>Only Display Predictions for this Route at this Stop</label>
+                    <br>
+                </div>
 
-            <div class="advancedOption w3-margin-bottom">
-                <input class="w3-check" type="checkbox" id="displayDetailedBranches">
-                <label>Display Detailed Branches Data</label>
-                <br>
+                <div class="advancedOption w3-margin-bottom">
+                    <input class="w3-check" type="checkbox" id="displayDetailedBranches">
+                    <label>Display Detailed Branches Data</label>
+                    <br>
+                </div>
+                <button class="w3-btn w3-teal w3-section" id="clearByRoute">Clear</button>
             </div>
-            <button class="w3-btn w3-teal w3-section" id="clearByRoute">Clear</button>
-        </form>
-        <form class="w3-container w3-card w3-margin w3-hover-shadow w3-light-grey">
-            <h3>By Stop Number</h3>
-            <label>Stop ID:</label>
-            <input class="inputStopId w3-input w3-round w3-hover-grey" type="number" style="width:150px; display:inline-block" />
-            <br>
-            <button class="w3-btn w3-teal w3-section" id="clearByStopId">Clear</button>
-        </form>
-        <button class="w3-btn w3-teal w3-margin w3-light-grey" id="default">Default</button>
-        <button class="w3-btn w3-teal w3-margin w3-light-grey" id="reset">Reset</button>
-        <button class="w3-btn w3-teal w3-margin w3-light-grey" id="go">Go</button>
-        <button class="w3-btn w3-teal w3-margin w3-light-grey" id="advancedOptions">Show Advanced Options</button>
+            <div class="w3-container w3-rest w3-card w3-hover-shadow w3-light-grey">
+                <h3>By Stop Number</h3>
+                <label>Stop ID:</label>
+                <input class="inputStopId w3-input w3-round w3-hover-grey" type="number" style="width:200px; display:inline-block" />
+                <br>
+                <button class="w3-btn w3-teal w3-section" id="clearByStopId">Clear</button>
+            </div>
+        </div>
+        <div class="w3-container w3-center">
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="default">Default</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="reset">Reset</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="go">Go</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="advancedOptions">Show Advanced Options</button>
+        </div>
     </div>
 
     <button class="w3-btn w3-teal w3-margin" id="refresh">Refresh</button>
 
     <div class="w3-container w3-margin w3-card w3-hover-shadow w3-teal w3-row">
-        <div id="predictions" style="padding:20px;" class="w3-col l7"></div>
-        <div class="w3-col l5">
-            <div id="map" class="w3-margin" style="width:400px; height:400px; background:yellow"></div>
+        <div class="w3-half w3-margin-right" id="predictions" style="padding:20px;" ></div>
+        <div class="w3-rest">
+            <div id="map" class="w3-margin" style="width:auto; height:400px; background:yellow"></div>
             <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
             <p class="w3-margin">Click on Red Pin to Reset View</p>
         </div>
