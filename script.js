@@ -25,11 +25,12 @@ var mapVehicleObjects = [];
 //map object
 var map;
 
+//HTTP request test
+var httpRequestTest;
 //old xml for all predictions, to verify new xml has been retrieved
 var oldAllPredXML;
 //current xml for all predictions
 var allPredXML;
-
 //old xml for vehicle locations, to verify new data has been retrieved
 var oldVechLocXML;
 //current xml for vehicle locations
@@ -106,6 +107,9 @@ $(document).ready(pageReady);
 
 //page ready
 function pageReady() {
+    //test HTTP request
+    getData("test");
+
     //button press
     $("button").click(buttonPress);
 
@@ -920,6 +924,11 @@ function parseXML(data, type) {
         case "new":
             newRouteDataXML = data;
             newRouteReady = true;
+        case "test":
+            if (data != undefined) {
+                httpRequestTest = data;
+                document.getElementById('mixedContentHelpModal').style.display = 'none';
+            }
     }
 }
 
@@ -954,6 +963,9 @@ function getData(type) {
             } else {
                 url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + newRoute
             }
+            break;
+        case "test":
+            url = "http://webservices.nextbus.com/service/publicXMLFeed?command=agencyList";
             break;
     }
 
