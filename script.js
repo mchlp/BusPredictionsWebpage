@@ -273,10 +273,16 @@ function selectChange() {
             }
             $("#branchSelect").val("0");
             $("#stopSelect").val("0");
+            $("#branchSelectDisplay")[0].label = "Please Wait. Branch Data Loading...";
+            $("#branchSelect")[0].disabled = true;
+            $("#stopSelectDisplay")[0].label = "Select a Branch to See Stops";
+            $("#stopSelect")[0].disabled = true;
             break;
 
         case "branchSelect":
             newRouteTag = $("#branchSelect").val();
+            $("#stopSelectDisplay")[0].label = "Please Wait. Stop Data Loading...";
+            $("#stopSelect")[0].disabled = true;
             getStopData("new");
             displayStopData();
             break;
@@ -554,6 +560,7 @@ function displayAllRoutes() {
     $("#routeSelect").empty();
 
     $("#routeSelect").append($("<option>", {
+        id: "routeSelectDisplay",
         value: 0,
         text: "Select Route"
     }));
@@ -634,6 +641,8 @@ function displayPredictions(refresh) {
     $("<h2></h2>").html(predStopTitle).appendTo("#predictions");
     $("<strong></strong>").html("Stop ID: " + stopId).appendTo("#predictions");
 
+    var predictionAvailable = false;
+
     for (var h = 0; h < allPredDirectionData.length; h++) {
 
         var thisPredData = allPredDirectionData[h];
@@ -657,10 +666,16 @@ function displayPredictions(refresh) {
                     $("<li></li>").html(curPredData["branch"] + " - " + curPredData["vehicle"] + " - in " +
                         curPredData["minutes"] + " min " + curPredData["seconds"] + " sec - " +
                         curPredData["timeStr"]).appendTo("#predictions");
+                    predictionAvailable = true;
                 }
             }
         }
     }
+
+    if (!predictionAvailable) {
+        $("<h4></h4>").html("No Predictions Currently Available For This Stop.").appendTo("#predictions");
+    }
+
     if (!refresh) {
         $("#predictions").get(0).scrollIntoView();
     }
@@ -718,6 +733,7 @@ function displayStopData(type) {
     $("#stopSelect").empty();
 
     $("#stopSelect").append($("<option>", {
+        id: "stopSelectDisplay",
         value: 0,
         text: "Select Stop"
     }));
@@ -736,6 +752,7 @@ function displayStopData(type) {
             }));
         }
     }
+    $("#stopSelect")[0].disabled = false;
 }
 
 //get data for each direction of route & clear interval
@@ -790,9 +807,12 @@ function displayBranchData() {
     $("#branchSelect").empty();
 
     $("#branchSelect").append($("<option>", {
+        id: "branchSelectDisplay",
         value: 0,
         text: "Select Branch"
     }));
+
+    branchAvailable = false;
 
     for (var curBranchName in selectorBranchData) {
         curBranch = selectorBranchData[curBranchName];
@@ -800,7 +820,16 @@ function displayBranchData() {
             value: curBranch["tag"],
             text: curBranch["title"]
         }));
+        branchAvailable = true;
     }
+
+    $("#branchSelect")[0].disabled = false;
+
+    if (!branchAvailable) {
+        $("#branchSelectDisplay")[0].label = "Select a Route to See Branches";
+        $("#branchSelect")[0].disabled = true;
+    }
+
 }
 
 //get coordinates for the route path
@@ -857,7 +886,6 @@ function parseXML(data, type) {
             simpleRouteDataXML = data;
             break;
         case "stop":
-            console.log(data)
             routeDataXML = data;
             newRouteDataXML = data;
             fullBranchDataXML = data;
@@ -1012,7 +1040,7 @@ function checkUpdateByIdForPred() {
         if (allPredXML.getElementsByTagName("Error").length > 0) {
             if (allPredXML.getElementsByTagName("Error")[0].attributes.getNamedItem("shouldRetry").value === "false") {
                 console.log("GO BUTTON - Invalid Stop ID entered");
-                displayInputError("Stop ID Entered Is Invalid");
+                displayInputError("The Stop ID Entered Is Not Valid. ");
                 $("#loadingContainer").hide();
                 return;
             }
@@ -1077,8 +1105,7 @@ function displayInputError(text) {
 
 //go button clicked
 function goButtonClicked() {
-    $("#errorContainer").hide();
-    $(".inputMessage").text("");
+    $(".errorContainer").hide();
     if ($("#routeSelect").val() != 0 && $("#routeSelect").val() != 0 && $("#stopSelect").val() != 0) {
         if ($(".inputStopId").val() == "") {
             console.log("GO BUTTON - selector");
@@ -1086,7 +1113,7 @@ function goButtonClicked() {
             $(".errorContainer").hide();
         } else {
             console.log("GO BUTTON - more than one field selected");
-            displayInputError("Only one field may be selected.");
+            displayInputError("You Can Only Search By Route OR By Stop Number, Not Both.");
         }
     } else if ($(".inputStopId").val() != "") {
         console.log("GO BUTTON - stop id");
@@ -1094,7 +1121,7 @@ function goButtonClicked() {
         setUpNewRouteById();
     } else {
         console.log("GO BUTTON - no info entered");
-        displayInputError("No fields were completed");
+        displayInputError("Insufficient Information Entered. Ensure You Have Completed One of the Two Fields.");
     }
 }
 
