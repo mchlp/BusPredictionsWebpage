@@ -929,6 +929,9 @@ function parseXML(data, type) {
                 httpRequestTest = data;
                 //document.getElementById('mixedContentHelpModal').style.display = 'none';
                 $("#mixedContentHelpModal").hide();
+            } else {
+                var curTime = Date.now()
+                document.cookie = "lastHTTPFail=curTime"
             }
     }
 }
