@@ -1,3 +1,5 @@
+//if the mixed content warning was displayed
+var mixContentWarned = false;
 //last time the page was reloaded
 var lastReloadTime;
 //whether the last data refresh was complete
@@ -434,7 +436,7 @@ function createPage() {
     getBranchData("regular");
     getBranchData("simple");
     getBranchData("full");
-    if ($("#displayDetailedBranches").is(':checked')) {
+    if ($("#displayDetailedBranches").is(":checked")) {
         selectorBranchData = branchData;
     } else {
         selectorBranchData = simpleBranchData;
@@ -507,7 +509,7 @@ function createMap() {
     updateMapVehicleLocations();
 
     //click on marker to reset zoom
-    google.maps.event.addListener(stopMarker, 'click', function() {
+    google.maps.event.addListener(stopMarker, "click", function() {
         map.setZoom(defaultZoom);
         map.setCenter(stopMarker.getPosition());
     });
@@ -675,6 +677,12 @@ function displayPredictions(refresh) {
     if (!predictionAvailable) {
         $("<h4></h4>").html("No Predictions Currently Available For This Stop.").appendTo("#predictions");
     }
+
+    $("<hr>").appendTo("#predictions");
+
+    var curTime = new Date();
+    $("<h4></h4>").html("Last Updated: " + formatTime12Hour(curTime)).appendTo("#predictions");
+    $("<p></p>").html("Predictions Automatically Update Every 5 Seconds.").appendTo("#predictions");
 
     if (!refresh) {
         $("#predictions").get(0).scrollIntoView();
@@ -933,7 +941,7 @@ function getData(type) {
             url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeList&a=ttc";
             break;
         case "new":
-            if ($("#displayDetailedBranches").is(':checked')) {
+            if ($("#displayDetailedBranches").is(":checked")) {
                 url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + newRoute + "&verbose";
             } else {
                 url = "http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=ttc&r=" + newRoute
@@ -1197,4 +1205,23 @@ function autoRefreshPredictions() {
     if (lastRefreshComplete) {
         refreshPredictions();
     }
+}
+
+//format time into AM/PM (12 hour format)
+function formatTime12Hour(date) {
+    var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    var weekDay = days[date.getDay()];
+    var month = months[date.getMonth()];
+    var day = date.getDate();
+    var year = date.getFullYear()
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var seconds = date.getSeconds();
+    var ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour "0" should be "12"
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    var strTime = weekDay + ", " + month + " " + day + ", " + year + " " + hours + ":" + minutes + ":" + seconds + " " + ampm;
+    return strTime;
 }
