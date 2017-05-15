@@ -118,6 +118,9 @@ function pageReady() {
     //get location
     //getLocation();
 
+    //show mixed content help
+    displayMixedContentHelp();
+
     //hide advanced options
     toggleAdvancedOptions(false);
 
@@ -126,6 +129,11 @@ function pageReady() {
 
     //refresh page display
     setUpNewRoute();
+}
+
+//display mixed content help
+function displayMixedContentHelp() {
+    $("#mixedContentHelpModal").show();
 }
 
 //get location

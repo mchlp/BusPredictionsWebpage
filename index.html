@@ -82,13 +82,32 @@
     <button class="w3-btn w3-teal w3-margin" id="refresh">Refresh</button>
 
     <div class="w3-container w3-margin w3-card w3-hover-shadow w3-teal w3-row">
-        <div class="w3-half w3-margin-right" id="predictions" style="padding:20px;" ></div>
+        <div class="w3-half w3-margin-right" id="predictions" style="padding:20px;"></div>
         <div class="w3-rest">
             <div id="map" class="w3-margin" style="width:auto; height:400px; background:teal"></div>
             <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
             <h5 class="w3-margin">Click on Red Pin to Reset View</h5>
         </div>
     </div>
+
+    <button onclick="document.getElementById('mixedContentHelpModal').style.display='block'" class="w3-button w3-black">Open Animated Modal</button>
+
+    <div id="mixedContentHelpModal" class="w3-modal">
+        <div class="w3-modal-content w3-animate-top w3-card-4">
+            <header class="w3-container w3-teal">
+                <span onclick="document.getElementById('mixedContentHelpModal').style.display='none'" class="w3-button w3-display-topright">&times;</span>
+                <h2>Modal Header</h2>
+            </header>
+            <div class="w3-container">
+                <p>Some text..</p>
+                <p>Some text..</p>
+            </div>
+            <footer class="w3-container w3-teal">
+                <p>Modal Footer</p>
+            </footer>
+        </div>
+    </div>
+
 </body>
 
 </html>
