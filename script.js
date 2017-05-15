@@ -971,7 +971,7 @@ function getData(type) {
 function displayLoadingErrorMessage() {
     clearInterval(loadingCheckerInterval);
     if (!doneLoading) {
-        $(".loadingMessage").text("Error 1 - Data could not be retrieved.");
+        $(".loadingMessage").text("Error - Data Could not be Retrieved. Check your Internet Connection.");
         $("#loadingContainer").removeClass("w3-pale-blue w3-border-blue")
         $("#loadingContainer").addClass("w3-pale-red w3-border-red")
         $(".loadingMessage").addClass("errorMessage");
