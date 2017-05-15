@@ -927,7 +927,8 @@ function parseXML(data, type) {
         case "test":
             if (data != undefined) {
                 httpRequestTest = data;
-                document.getElementById('mixedContentHelpModal').style.display = 'none';
+                //document.getElementById('mixedContentHelpModal').style.display = 'none';
+                //$("#mixedContentHelpModal").hide();
             }
     }
 }
