@@ -653,7 +653,7 @@ function displayPredictions(refresh) {
     var predStopTag = allPredDirectionData[0]["stopTag"];
 
     $("<h2></h2>").html(predStopTitle).appendTo("#predictions");
-    $("<strong></strong>").html("Stop ID: " + stopId).appendTo("#predictions");
+    $("<strong></strong>").html("Stop Number: " + stopId).appendTo("#predictions");
 
     var predictionAvailable = false;
 
@@ -1071,8 +1071,8 @@ function checkUpdateByIdForPred() {
 
         if (allPredXML.getElementsByTagName("Error").length > 0) {
             if (allPredXML.getElementsByTagName("Error")[0].attributes.getNamedItem("shouldRetry").value === "false") {
-                console.log("GO BUTTON - Invalid Stop ID entered");
-                displayInputError("The Stop ID Entered Is Not Valid. ");
+                console.log("GO BUTTON - Invalid Stop Number entered");
+                displayInputError("The Stop Number Entered Is Not Valid. ");
                 $("#loadingContainer").hide();
                 return;
             }
@@ -1148,7 +1148,7 @@ function goButtonClicked() {
             displayInputError("You Can Only Search By Route OR By Stop Number, Not Both.");
         }
     } else if ($(".inputStopId").val() != "") {
-        console.log("GO BUTTON - stop id");
+        console.log("GO BUTTON - stop number");
         newStopId = $(".inputStopId").val();
         setUpNewRouteById();
     } else {
