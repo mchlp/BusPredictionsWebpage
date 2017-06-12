@@ -123,7 +123,7 @@ function pageReady() {
     //getLocation();
 
     //show mixed content help
-    displayMixedContentHelp();
+    //displayMixedContentHelp();
 
     //hide advanced options
     toggleAdvancedOptions(false);
