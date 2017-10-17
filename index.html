@@ -2,102 +2,125 @@
 <html>
 
 <head>
-    <title>Test Page</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <script src="scripts/jquery.min.js"></script>
+    <script src="jquery.min.js"></script>
     <script src="script.js"></script>
-    <link rel="stylesheet" href="styles/w3.css">
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/w3.css" />
+    <title>Vehicle Predictions - Test</title>
+    <link rel="shortcut icon" href="favicon.ico" />   
 </head>
 
 <body>
-    <div id="content">
-        <div id="title" class="w3-container w3-teal">
-            <h5>Homepage</h5>
-        </div>
+    <audio autoplay="" muted="">
+            <source src="resources/chime.mp3" type="audio/mp3" />Your browser does not support the audio element.
+        </audio>
+    <div id="title" class="w3-container w3-teal">
+        <h1>TTC Bus &amp; Streetcar Predictions</h1>
+    </div>
 
-        <div id="navBar" class="fixed-nav-bar">
-            <div class="w3-bar w3-dark-grey w3-card-2">
+    <div class="w3-panel w3-pale-blue w3-leftbar w3-border-blue w3-display-container" id="loadingContainer">
+        <i class="loader fa fa-refresh fa-spin w3-margin" id="loadSpinnerNormal"></i>
+        <h1 class="loadingMessage" style="display:inline-block"> </h1>
+    </div>
 
-                <button class="w3-bar-item w3-button w3-mobile w3-border-right w3-green">Home</button>
-                <button class="w3-bar-item w3-button w3-mobile w3-border-right">Page 1</button>
-                <button class="w3-bar-item w3-button w3-mobile w3-border-right">Page 2</button>
+    <div class="errorContainer w3-panel w3-red w3-card-4 w3-display-container" style="display:none">
+        <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-center w3-red w3-display-topright" style="height:100%; vertical-align:middle">&times;</span>
+        <p class="errorMessage inputMessage" style="color:white; font-size:16px; font-weight:bold"></p>
+    </div>
 
-                <div style="float:right">
-                    <input id="searchField" type="text" class="w3-bar-item w3-mobile w3-input" placeholder="Search..">
-                    <button id="searchGoButton" class="w3-bar-item w3-button w3-green">Go</a>
-                </div>
-
-                <div class="w3-dropdown-hover w3-border-left w3-border-right" style="float:right">
-                    <button class="w3-button">Projects</button>
-                    <div class="w3-dropdown-content w3-bar-block w3-card-4">
-                        <button id="busPredictorPage" class="w3-bar-item w3-mobile w3-button">Bus Predictor</button>
-                        <button id="CulminatingTGJ2O" class="w3-bar-item w3-mobile w3-button">TGJ2O Culminating Project</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <div class="w3-container">
-            <div class="w3-panel w3-teal w3-hover-shadow w3-leftbar w3-border-green">
-                <p>This is currently a test page. Some features may not work.</p>
-            </div>
-        </div>
-
-        <div id="alert" class="w3-container" style="display:none">
-            <div id="panel" class="w3-panel w3-red w3-display-container">
-                <span onclick="this.parentElement.style.display='none'" class="w3-button w3-red w3-large w3-display-topright">x</span>
-                <p>Click on the X to close this panel.</p>
-            </div>
-        </div>
-
-        <div id="weather" class="w3-card-4 w3-margin w3-mobile" style="width:50%">
-            <div class="w3-display-container w3-text-white">
-                <a href="https://darksky.net/poweredby/">
-                    <img class="w3-hover-shadow" src="images/poweredby-dark.png" alt="Powered by Dark Sky" style="width:25%; position:absolute; bottom:6px; right:0px" />
-                </a>
-                <img src="images/toronto.jpg" alt="Toronto" style="width:100%">
-                <div id="weatherLoc" class="w3-large w3-display-topleft w3-padding w3-panel w3-teal">-</div>
-                <div class="w3-large w3-center w3-display-bottomleft w3-padding w3-panel w3-teal">
-                    <img id="weatherImage" src="images/sunny.png" style="width:50px" />
+    <div class="w3-panel w3-pale-yellow w3-leftbar w3-border-yellow w3-display-container">
+        <span onclick="this.parentElement.style.display='none'" class="w3-button w3-large w3-center w3-yellow w3-display-topright" style="height:100%; vertical-align:middle">&times;</span>
+        <p>Use ONE of the two options below to select a stop and click GO to get predictions.</p>
+    </div>
+    <br />
+    <div class="w3-container w3-margin w3-card-4 w3-teal">
+        <h2>Select a Stop</h2>
+        <div class="w3-row">
+            <div class="w3-container w3-half w3-card w3-hover-shadow w3-margin-right w3-light-grey w3-left">
+                <h3>By Route</h3>
+                <select class="w3-select w3-hover-grey w3-round" name="option" id="routeSelect">
+                    <option value="">Select Route</option>
+                </select>
+                <br>
+                <select class="w3-select w3-hover-grey w3-round" name="option" id="branchSelect">
+                    <option value="0">Select Branch</option>
+                </select>
+                <br>
+                <select class="w3-select w3-hover-grey w3-round" name="option" id="stopSelect">
+                    <option value="0">Select Stop</option>
+                </select>
+                <br>
+                <div class="advancedOption w3-margin-top">
+                    <input class="w3-check" type="checkbox" id="displayOnlyThisRoute">
+                    <label>Only Show Predictions for this Route at this Stop</label>
                     <br>
-                    <text id="weatherTemp">-</text>
                 </div>
-            </div>
-            <div class="w3-row">
-                <div class="w3-third w3-center">
-                    <h3 id="weatherDay1Title">MON</h3>
-                    <img id="weatherDay1Image" src="" alt="day+1" style="width:50px">
-                </div>
-                <div class="w3-third w3-center">
-                    <h3 id="weatherDay2Title">TUE</h3>
-                    <img id="weatherDay2Image" src="" alt="day+2" style="width:50px">
-                </div>
-                <div class="w3-third w3-center w3-margin-bottom">
-                    <h3 id="weatherDay3Title">WED</h3>
-                    <img id="weatherDay3Image" src="" alt="day+3" style="width:50px">
-                </div>
-            </div>
-        </div>
 
-        <div class="w3-container">
-            <button class="w3-button w3-red" onclick="document.getElementById('id01').style.display='block'">Show Panel</button>
-
-            <div id="id01" class="w3-panel w3-green w3-display-container" style="display:none">
-                <span onclick="this.parentElement.style.display='none'" class="w3-button w3-red w3-display-topright">x</span>
-                <p>Click on the X to close this panel.</p>
-                <p>Click on the X to close this panel.</p>
+                <div class="advancedOption w3-margin-bottom">
+                    <input class="w3-check" type="checkbox" id="displayDetailedBranches">
+                    <label>Show Detailed Branch Data</label>
+                    <br>
+                </div>
+                <button class="w3-btn w3-teal w3-section" id="clearByRoute">Clear</button>
+            </div>
+            <div class="w3-container w3-rest w3-card w3-hover-shadow w3-light-grey">
+                <h3>By Stop Number</h3>
+                <label>Stop Number:</label>
+                <input class="inputStopId w3-input w3-round w3-hover-grey" type="number" style="width:200px; display:inline-block" />
+                <br>
+                <button class="w3-btn w3-teal w3-section" id="clearByStopId">Clear</button>
             </div>
         </div>
-
-        <br>
-
-        <div class="w3-container">
-            <a href="../index.html">Back to Home</a>
+        <div class="w3-container w3-center">
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="default">Default</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="reset">Reset</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="go">Go</button>
+            <button class="w3-btn w3-teal w3-margin w3-light-grey" id="advancedOptions">Show Advanced Options</button>
         </div>
     </div>
+
+    <button class="w3-btn w3-teal w3-margin" id="refresh">Refresh</button>
+
+    <div class="w3-container w3-margin w3-card w3-hover-shadow w3-teal w3-row">
+        <div class="w3-half w3-margin-right" id="predictions" style="padding:20px;"></div>
+        <div class="w3-rest">
+            <div id="map" class="w3-margin" style="width:auto; height:400px; background:teal"></div>
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAUX25xmVcQjbeJ0rxvw6XtJsK2QclxS-I"></script>
+            <h5 class="w3-margin">Click on Red Pin to Reset View</h5>
+        </div>
+    </div>
+
+    <div id="mixedContentHelpModal" class="w3-modal">
+        <div style="height:auto;" class="w3-modal-content w3-animate-opacity w3-card-4">
+            <header class="w3-container w3-teal">
+                <span onclick="$('#mixedContentHelpModal').hide();" class="w3-button w3-display-topright">&times;</span>
+                <h2>How To Allow Real-Time Predictions To Be Retrieved</h2>
+            </header>
+            <div class="w3-container">
+                <div class="w3-panel w3-card w3-container w3-hover-shadow w3-light-grey">
+                    <img src="images/contentBlockedHelpAddressBar.JPG" style="width:98%; cursor:pointer">
+                    <h4>Step 1</h4>
+                    <p>Find the shield icon on the right side of the address bar at the top of this window.</p>
+                    <p>If the shield icon is not there, skip to the bottom and click the "Reload" button.</p>
+                </div>
+                <div class="w3-panel w3-card w3-container w3-hover-shadow w3-light-grey">
+                    <img src="images/contentBlockedHelpIcons.JPG" style="cursor:pointer">
+                    <h4>Step 2</h4>
+                    <p>Click on the shield icon.</p>
+                </div>
+                <div class="w3-panel w3-card w3-container w3-hover-shadow w3-light-grey">
+                    <img src="images/contentBlockedHelpPopUp.JPG" style="cursor:pointer">
+                    <h4>Step 3</h4>
+                    <p>In the pop-up, click "Load unsafe scripts"</p>
+                </div>
+            </div>
+            <footer class="w3-container w3-teal">
+                <button class="w3-btn w3-teal w3-margin w3-light-grey" onclick="location.reload();" id="default">Reload</button>
+            </footer>
+        </div>
+    </div>
+
 </body>
 
 </html>
